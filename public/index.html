@@ -5,12 +5,18 @@
 </head>
 <body>
     <h1>ssec-Sentinel</h1>
-    <p>Deployment Test</p>
+    <p>Deployed successfully!</p>
     <p>ETH: 0x8242f0f25c5445F7822e80d3C9615e57586c6639</p>
+    <div id="api-status">Checking API...</div>
     <script>
-        fetch('/api/health').then(r => r.json()).then(d => {
-            document.body.innerHTML += '<p>✅ API Connected</p>';
-        });
+        fetch('/api/health')
+            .then(r => r.json())
+            .then(data => {
+                document.getElementById('api-status').innerHTML = '✅ API connected: ' + data.status;
+            })
+            .catch(err => {
+                document.getElementById('api-status').innerHTML = '❌ API connection failed';
+            });
     </script>
 </body>
 </html>

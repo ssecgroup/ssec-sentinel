@@ -5,10 +5,10 @@ app = FastAPI()
 
 @app.get("/")
 async def root():
-    return {"message": "ssec-Sentinel API", "version": "0.3.0"}
+    return {"message": "ssec-Sentinel API"}
 
 @app.get("/api/health")
 async def health():
-    return {"status": "healthy", "service": "ssec-sentinel"}
+    return {"status": "healthy"}
 
 handler = Mangum(app)
