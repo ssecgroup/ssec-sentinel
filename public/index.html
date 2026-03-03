@@ -2,20 +2,17 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ssec-Sentinel � Emergency Intelligence Network</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>ssec·Sentinel • Emergency Intelligence</title>
     
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <!-- Leaflet Heatmap -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet.heat/dist/leaflet-heat.css" />
     <!-- Font Awesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     
     <style>
-        /* [Previous styles remain exactly the same - keeping them for brevity] */
         * {
             margin: 0;
             padding: 0;
@@ -46,30 +43,35 @@
             background: var(--bg-dark);
             color: var(--text);
             line-height: 1.6;
-            overflow: hidden;
+            overflow-x: hidden;
+            width: 100%;
             height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
 
-        /* Header */
+        /* Header - Mobile Optimized */
         .header {
             background: var(--bg-card);
-            padding: 0.75rem 2rem;
+            padding: 0.5rem 1rem;
             display: flex;
+            flex-wrap: wrap;
             justify-content: space-between;
             align-items: center;
             border-bottom: 2px solid var(--primary);
             box-shadow: var(--shadow);
-            height: 70px;
+            min-height: 60px;
+            gap: 0.5rem;
         }
 
         .logo {
             display: flex;
             align-items: center;
-            gap: 0.75rem;
+            gap: 0.5rem;
         }
 
         .logo-icon {
-            font-size: 2rem;
+            font-size: 1.5rem;
             color: var(--primary);
             animation: pulse 2s infinite;
         }
@@ -81,122 +83,88 @@
         }
 
         .logo h1 {
-            font-size: 1.5rem;
+            font-size: 1.2rem;
             font-weight: 800;
             background: linear-gradient(135deg, #fff 0%, #ff4444 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            letter-spacing: -0.5px;
         }
 
         .logo span {
             background: var(--primary);
             color: white;
-            font-size: 0.7rem;
-            padding: 0.2rem 0.5rem;
+            font-size: 0.6rem;
+            padding: 0.1rem 0.3rem;
             border-radius: 20px;
             font-weight: 600;
-            margin-left: 0.5rem;
+            margin-left: 0.3rem;
         }
 
         .stats {
             display: flex;
-            gap: 2rem;
+            gap: 0.8rem;
             background: rgba(255,68,68,0.1);
-            padding: 0.5rem 1.5rem;
+            padding: 0.3rem 0.8rem;
             border-radius: 40px;
             border: 1px solid var(--primary);
+            flex-wrap: wrap;
         }
 
         .stat-item {
             display: flex;
             align-items: center;
-            gap: 0.5rem;
-            font-size: 0.9rem;
+            gap: 0.3rem;
+            font-size: 0.8rem;
             font-weight: 500;
         }
 
         .stat-item i {
             color: var(--primary);
-            font-size: 1rem;
+            font-size: 0.9rem;
         }
 
         .stat-value {
             color: var(--primary);
             font-weight: 700;
-            font-size: 1.2rem;
-            margin-right: 0.2rem;
+            font-size: 1rem;
+            margin-right: 0.1rem;
         }
 
         .refresh-btn {
             background: var(--primary);
             color: white;
             border: none;
-            padding: 0.6rem 1.2rem;
+            padding: 0.4rem 0.8rem;
             border-radius: 30px;
             font-weight: 600;
-            font-size: 0.9rem;
+            font-size: 0.8rem;
             cursor: pointer;
             display: flex;
             align-items: center;
-            gap: 0.5rem;
+            gap: 0.3rem;
             transition: all 0.3s;
             border: 1px solid transparent;
+            white-space: nowrap;
         }
 
         .refresh-btn:hover {
             background: transparent;
             border-color: var(--primary);
-            transform: scale(1.05);
         }
 
-        .refresh-btn i {
-            font-size: 0.9rem;
-        }
-
-        /* Main Container */
+        /* Main Container - Mobile Optimized */
         .main-container {
-            display: grid;
-            grid-template-columns: 400px 1fr 400px;
-            gap: 1rem;
-            padding: 1rem;
-            height: calc(100vh - 94px);
+            display: flex;
+            flex: 1;
             overflow: hidden;
-        }
-
-        /* Sidebars */
-        .sidebar {
-            background: var(--bg-card);
-            border-radius: 20px;
-            padding: 1.2rem;
-            overflow-y: auto;
-            border: 1px solid var(--border);
-            box-shadow: var(--shadow);
-            scrollbar-width: thin;
-            scrollbar-color: var(--primary) var(--bg-card);
-        }
-
-        .sidebar::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        .sidebar::-webkit-scrollbar-track {
-            background: var(--bg-card);
-        }
-
-        .sidebar::-webkit-scrollbar-thumb {
-            background: var(--primary);
-            border-radius: 10px;
-        }
-
-        /* Map Container */
-        .map-container {
-            background: var(--bg-card);
-            border-radius: 20px;
-            overflow: hidden;
-            border: 1px solid var(--border);
-            box-shadow: var(--shadow);
             position: relative;
+        }
+
+        /* Map Container - Always visible */
+        .map-container {
+            flex: 1;
+            position: relative;
+            background: var(--bg-card);
         }
 
         #map {
@@ -205,11 +173,11 @@
             z-index: 1;
         }
 
-        /* Map Controls */
+        /* Map Controls - Mobile Optimized */
         .map-controls {
             position: absolute;
-            top: 20px;
-            right: 20px;
+            bottom: 20px;
+            right: 10px;
             z-index: 1000;
             display: flex;
             flex-direction: column;
@@ -220,24 +188,29 @@
             background: var(--bg-card);
             color: white;
             border: 1px solid var(--border);
-            padding: 0.8rem 1.2rem;
+            padding: 0.6rem;
             border-radius: 40px;
             cursor: pointer;
             font-weight: 600;
-            font-size: 0.9rem;
+            font-size: 0.8rem;
             display: flex;
             align-items: center;
-            gap: 0.5rem;
+            justify-content: center;
+            gap: 0.3rem;
             transition: all 0.3s;
             backdrop-filter: blur(5px);
             box-shadow: var(--shadow);
+            width: 40px;
+            height: 40px;
+        }
+
+        .map-btn span {
+            display: none;
         }
 
         .map-btn:hover {
             background: var(--primary);
             border-color: var(--primary);
-            transform: translateX(-2px);
-            box-shadow: var(--shadow-hover);
         }
 
         .map-btn.active {
@@ -245,113 +218,153 @@
             border-color: var(--primary);
         }
 
-        .map-btn.danger {
-            background: var(--primary);
+        /* Mobile Sidebar Toggle */
+        .sidebar-toggle {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 1000;
+            background: var(--bg-card);
+            color: white;
+            border: 1px solid var(--primary);
+            padding: 0.6rem;
+            border-radius: 40px;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
         }
 
-        .map-btn.warning {
-            background: var(--warning);
+        .sidebar-toggle.right {
+            left: auto;
+            right: 10px;
         }
 
-        .map-btn.secondary {
-            background: var(--secondary);
+        /* Sidebars - Mobile Optimized */
+        .sidebar {
+            position: absolute;
+            top: 0;
+            left: -320px;
+            width: 300px;
+            height: 100%;
+            background: var(--bg-card);
+            border-right: 2px solid var(--primary);
+            box-shadow: var(--shadow);
+            transition: left 0.3s ease;
+            z-index: 2000;
+            overflow-y: auto;
+            padding: 1rem;
         }
 
-        /* Cards */
+        .sidebar.right {
+            left: auto;
+            right: -320px;
+            border-right: none;
+            border-left: 2px solid var(--primary);
+            transition: right 0.3s ease;
+        }
+
+        .sidebar.open {
+            left: 0;
+        }
+
+        .sidebar.right.open {
+            right: 0;
+        }
+
+        .sidebar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .sidebar-header h3 {
+            color: var(--primary);
+            font-size: 1.1rem;
+        }
+
+        .sidebar-close {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.2rem;
+            cursor: pointer;
+        }
+
+        /* Cards - Mobile Optimized */
         .card {
             background: rgba(255,255,255,0.03);
-            border-radius: 16px;
-            padding: 1.2rem;
-            margin-bottom: 1.2rem;
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 1rem;
             border: 1px solid var(--border);
-            transition: all 0.3s;
-        }
-
-        .card:hover {
-            border-color: var(--primary);
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-hover);
         }
 
         .card-header {
             display: flex;
             align-items: center;
-            gap: 0.75rem;
-            margin-bottom: 1.2rem;
-            font-size: 1.1rem;
+            gap: 0.5rem;
+            margin-bottom: 0.8rem;
+            font-size: 1rem;
             font-weight: 600;
             color: var(--primary);
             border-bottom: 1px solid var(--border);
-            padding-bottom: 0.8rem;
-        }
-
-        .card-header i {
-            font-size: 1.2rem;
+            padding-bottom: 0.5rem;
         }
 
         /* Conflict Items */
         .conflict-item {
             background: var(--bg-dark);
-            padding: 1rem;
-            border-radius: 12px;
-            margin-bottom: 0.8rem;
-            border-left: 4px solid;
-            transition: all 0.3s;
+            padding: 0.8rem;
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+            border-left: 3px solid;
             cursor: pointer;
-        }
-
-        .conflict-item:hover {
-            transform: translateX(5px);
+            font-size: 0.9rem;
         }
 
         .conflict-header {
             display: flex;
             justify-content: space-between;
-            align-items: center;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.3rem;
         }
 
         .conflict-title {
             font-weight: 600;
-            font-size: 0.95rem;
         }
 
         .conflict-badge {
-            padding: 0.2rem 0.6rem;
+            padding: 0.1rem 0.4rem;
             border-radius: 20px;
-            font-size: 0.7rem;
+            font-size: 0.6rem;
             font-weight: 600;
             color: white;
         }
 
-        .conflict-details {
-            font-size: 0.85rem;
-            color: var(--text-muted);
-            margin-bottom: 0.5rem;
-        }
-
         .conflict-meta {
             display: flex;
-            gap: 1rem;
-            font-size: 0.8rem;
-        }
-
-        .conflict-meta i {
-            color: var(--primary);
-            width: 16px;
+            gap: 0.8rem;
+            font-size: 0.7rem;
+            color: var(--text-muted);
         }
 
         /* Flight Items */
         .flight-item {
             background: var(--bg-dark);
-            padding: 0.8rem;
-            border-radius: 10px;
-            margin-bottom: 0.5rem;
+            padding: 0.6rem;
+            border-radius: 6px;
+            margin-bottom: 0.4rem;
             display: flex;
-            align-items: center;
             justify-content: space-between;
+            align-items: center;
             border-left: 3px solid var(--secondary);
-            cursor: pointer;
+            font-size: 0.8rem;
         }
 
         .flight-item.emergency {
@@ -360,13 +373,9 @@
             animation: blink 2s infinite;
         }
 
-        .flight-item:hover {
-            transform: translateX(5px);
-        }
-
         @keyframes blink {
             0% { opacity: 1; }
-            50% { opacity: 0.8; background: rgba(255,68,68,0.2); }
+            50% { opacity: 0.8; }
             100% { opacity: 1; }
         }
 
@@ -374,25 +383,26 @@
             font-weight: 600;
             display: flex;
             align-items: center;
-            gap: 0.5rem;
+            gap: 0.3rem;
         }
 
         .flight-emergency {
             color: var(--primary);
-            font-size: 0.7rem;
+            font-size: 0.6rem;
             font-weight: 600;
             background: rgba(255,68,68,0.2);
-            padding: 0.2rem 0.5rem;
+            padding: 0.1rem 0.3rem;
             border-radius: 20px;
         }
 
         /* Signal Items */
         .signal-item {
             background: var(--bg-dark);
-            padding: 1rem;
-            border-radius: 12px;
-            margin-bottom: 0.8rem;
-            border-left: 4px solid;
+            padding: 0.8rem;
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+            border-left: 3px solid;
+            font-size: 0.8rem;
         }
 
         .signal-item.high {
@@ -403,24 +413,19 @@
             border-left-color: var(--warning);
         }
 
-        .signal-item.low {
-            border-left-color: var(--secondary);
-        }
-
         .signal-header {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.3rem;
         }
 
         .signal-title {
             font-weight: 600;
-            font-size: 0.9rem;
         }
 
         .signal-severity {
-            font-size: 0.7rem;
-            padding: 0.2rem 0.6rem;
+            font-size: 0.6rem;
+            padding: 0.1rem 0.3rem;
             border-radius: 20px;
             font-weight: 600;
         }
@@ -435,44 +440,35 @@
             color: white;
         }
 
-        .signal-severity.low {
-            background: var(--secondary);
-            color: white;
-        }
-
         /* Radio Player */
         .radio-controls {
             display: flex;
-            gap: 0.5rem;
-            margin-bottom: 1rem;
+            gap: 0.3rem;
+            margin-bottom: 0.5rem;
+            flex-wrap: wrap;
         }
 
         .radio-select {
             flex: 1;
-            padding: 0.8rem;
+            min-width: 150px;
+            padding: 0.5rem;
             background: var(--bg-dark);
             color: white;
             border: 1px solid var(--border);
-            border-radius: 12px;
-            font-size: 0.9rem;
-        }
-
-        .radio-select option {
-            background: var(--bg-card);
+            border-radius: 8px;
+            font-size: 0.8rem;
         }
 
         .radio-btn {
             background: var(--primary);
             color: white;
             border: none;
-            padding: 0.8rem 1.5rem;
-            border-radius: 12px;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
             font-weight: 600;
             cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            transition: all 0.3s;
+            font-size: 0.8rem;
+            white-space: nowrap;
         }
 
         .radio-btn.stop {
@@ -481,64 +477,52 @@
 
         .radio-status {
             background: var(--bg-dark);
-            padding: 0.8rem;
-            border-radius: 8px;
-            font-size: 0.85rem;
-            margin-top: 0.5rem;
+            padding: 0.5rem;
+            border-radius: 6px;
+            font-size: 0.7rem;
+            margin-top: 0.3rem;
         }
 
         #radioPlayer {
             width: 100%;
-            margin-top: 1rem;
-            border-radius: 12px;
-            background: var(--bg-dark);
-            border: 1px solid var(--border);
+            margin-top: 0.5rem;
+            border-radius: 8px;
         }
 
         /* Helplines */
         .country-select {
             width: 100%;
-            padding: 0.8rem;
+            padding: 0.5rem;
             background: var(--bg-dark);
             color: white;
             border: 1px solid var(--border);
-            border-radius: 12px;
-            margin-bottom: 1rem;
-            cursor: pointer;
-        }
-
-        .country-select option {
-            background: var(--bg-card);
+            border-radius: 8px;
+            margin-bottom: 0.8rem;
+            font-size: 0.8rem;
         }
 
         .helpline-item {
             background: var(--bg-dark);
-            padding: 1rem;
-            border-radius: 12px;
-            margin-bottom: 0.8rem;
+            padding: 0.6rem;
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
             border-left: 3px solid var(--accent);
+            font-size: 0.8rem;
         }
 
         .helpline-name {
             font-weight: 600;
             color: var(--accent-light);
-            margin-bottom: 0.3rem;
         }
 
         .helpline-number {
-            font-size: 1.1rem;
+            font-size: 0.9rem;
             font-weight: 600;
-            margin-bottom: 0.2rem;
         }
 
         .helpline-number i {
             color: var(--secondary);
-            margin-right: 0.5rem;
-        }
-
-        .helpline-available {
-            font-size: 0.8rem;
-            color: var(--secondary);
+            margin-right: 0.3rem;
         }
 
         /* ETH Card */
@@ -549,75 +533,62 @@
 
         .eth-address {
             background: var(--bg-dark);
-            padding: 0.8rem;
-            border-radius: 8px;
+            padding: 0.5rem;
+            border-radius: 6px;
             font-family: monospace;
-            font-size: 0.85rem;
+            font-size: 0.7rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
             border: 1px solid var(--accent);
+            word-break: break-all;
         }
 
         .copy-btn {
             background: var(--accent);
             color: white;
             border: none;
-            padding: 0.5rem 1rem;
-            border-radius: 6px;
+            padding: 0.3rem 0.6rem;
+            border-radius: 4px;
             cursor: pointer;
-            font-size: 0.8rem;
-            transition: all 0.3s;
-        }
-
-        .copy-btn:hover {
-            background: var(--accent-light);
-        }
-
-        .copy-btn.copied {
-            background: var(--secondary);
+            font-size: 0.7rem;
+            white-space: nowrap;
+            margin-left: 0.3rem;
         }
 
         /* Toast */
         .toast {
             position: fixed;
             bottom: 20px;
-            right: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
             background: var(--bg-card);
             border-left: 4px solid var(--secondary);
-            padding: 1rem 1.5rem;
-            border-radius: 12px;
+            padding: 0.8rem 1.2rem;
+            border-radius: 8px;
             box-shadow: var(--shadow);
             display: flex;
             align-items: center;
-            gap: 1rem;
-            transform: translateX(400px);
+            gap: 0.8rem;
             transition: transform 0.3s;
-            z-index: 2000;
+            z-index: 3000;
+            font-size: 0.8rem;
+            max-width: 90%;
         }
 
         .toast.show {
-            transform: translateX(0);
+            transform: translateX(-50%) translateY(0);
         }
 
         .toast.error {
             border-left-color: var(--primary);
         }
 
-        .toast i {
-            color: var(--secondary);
-            font-size: 1.2rem;
-        }
-
-        .toast.error i {
-            color: var(--primary);
-        }
-
         /* Footer */
         .footer {
             background: var(--bg-card);
-            padding: 0.6rem 2rem;
-            font-size: 0.8rem;
+            padding: 0.4rem 1rem;
+            font-size: 0.7rem;
             color: var(--text-muted);
             border-top: 1px solid var(--border);
             display: flex;
@@ -628,11 +599,7 @@
         .footer a {
             color: var(--primary);
             text-decoration: none;
-            margin: 0 0.5rem;
-        }
-
-        .footer a:hover {
-            text-decoration: underline;
+            margin: 0 0.3rem;
         }
 
         .eth-footer {
@@ -640,12 +607,12 @@
             font-family: monospace;
         }
 
-        /* Loading */
+        /* Loading States */
         .loading {
             display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(255,68,68,0.3);
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255,68,68,0.3);
             border-radius: 50%;
             border-top-color: var(--primary);
             animation: spin 1s linear infinite;
@@ -659,8 +626,8 @@
             background: linear-gradient(90deg, var(--bg-dark) 25%, var(--bg-hover) 50%, var(--bg-dark) 75%);
             background-size: 200% 100%;
             animation: skeleton 1.5s infinite;
-            border-radius: 8px;
-            height: 60px;
+            border-radius: 6px;
+            height: 50px;
             margin-bottom: 0.5rem;
         }
 
@@ -669,14 +636,53 @@
             100% { background-position: -200% 0; }
         }
 
-        /* Error State */
-        .error-message {
-            color: var(--primary);
-            text-align: center;
-            padding: 1rem;
-            background: rgba(255,68,68,0.1);
-            border-radius: 8px;
-            font-size: 0.9rem;
+        /* Desktop Styles */
+        @media (min-width: 768px) {
+            .sidebar-toggle {
+                display: none;
+            }
+
+            .sidebar {
+                position: relative;
+                left: 0;
+                width: 350px;
+                height: 100%;
+                border-right: 2px solid var(--primary);
+                transition: none;
+            }
+
+            .sidebar.right {
+                right: 0;
+                border-left: 2px solid var(--primary);
+            }
+
+            .sidebar-close {
+                display: none;
+            }
+
+            .main-container {
+                display: grid;
+                grid-template-columns: 350px 1fr 350px;
+            }
+
+            .map-container {
+                grid-column: 2;
+            }
+
+            .map-controls {
+                bottom: 20px;
+                right: 20px;
+            }
+
+            .map-btn {
+                width: auto;
+                height: auto;
+                padding: 0.8rem 1.2rem;
+            }
+
+            .map-btn span {
+                display: inline;
+            }
         }
     </style>
 </head>
@@ -684,40 +690,54 @@
     <header class="header">
         <div class="logo">
             <i class="fas fa-broadcast-tower logo-icon"></i>
-            <h1>ssec�Sentinel</h1>
+            <h1>ssec·Sentinel</h1>
             <span>v0.3</span>
         </div>
         
         <div class="stats">
             <div class="stat-item">
                 <i class="fas fa-exclamation-triangle"></i>
-                <span><span class="stat-value" id="conflict-count">0</span> conflicts</span>
+                <span><span class="stat-value" id="conflict-count">0</span></span>
             </div>
             <div class="stat-item">
                 <i class="fas fa-plane"></i>
-                <span><span class="stat-value" id="flight-count">0</span> flights</span>
+                <span><span class="stat-value" id="flight-count">0</span></span>
             </div>
             <div class="stat-item">
                 <i class="fas fa-bell"></i>
-                <span><span class="stat-value" id="signal-count">0</span> alerts</span>
+                <span><span class="stat-value" id="signal-count">0</span></span>
             </div>
         </div>
         
         <button class="refresh-btn" onclick="refreshAll()">
             <i class="fas fa-sync-alt"></i>
-            Refresh
+            <span>Refresh</span>
         </button>
     </header>
 
     <div class="main-container">
+        <!-- Mobile Sidebar Toggles -->
+        <button class="sidebar-toggle" onclick="toggleSidebar('left')">
+            <i class="fas fa-bars"></i>
+        </button>
+        <button class="sidebar-toggle right" onclick="toggleSidebar('right')">
+            <i class="fas fa-chevron-right"></i>
+        </button>
+
         <!-- LEFT SIDEBAR - Conflicts & Flights -->
-        <div class="sidebar">
+        <div class="sidebar" id="sidebar-left">
+            <div class="sidebar-header">
+                <h3><i class="fas fa-exclamation-triangle"></i> Conflicts & Flights</h3>
+                <button class="sidebar-close" onclick="toggleSidebar('left')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
             <!-- Active Conflicts -->
             <div class="card">
                 <div class="card-header">
                     <i class="fas fa-exclamation-triangle"></i>
                     <span>Active Conflicts</span>
-                    <span style="margin-left: auto; font-size: 0.8rem; color: var(--text-muted);" id="conflict-source">ACLED</span>
                 </div>
                 <div id="conflicts-container">
                     <div class="skeleton"></div>
@@ -730,12 +750,9 @@
                 <div class="card-header">
                     <i class="fas fa-plane"></i>
                     <span>Emergency Flights</span>
-                    <span style="margin-left: auto; font-size: 0.8rem; color: var(--text-muted);" id="flight-source">OpenSky</span>
                 </div>
                 <div id="flights-container">
-                    <div style="text-align: center; color: var(--text-muted); padding: 1rem;">
-                        <i class="fas fa-info-circle"></i> Click on map to see flights
-                    </div>
+                    <div class="skeleton"></div>
                 </div>
             </div>
         </div>
@@ -746,36 +763,38 @@
             
             <!-- Map Controls -->
             <div class="map-controls">
-                <button class="map-btn active" onclick="toggleLayer('conflicts')" id="btn-conflicts" title="Toggle Conflict Zones">
+                <button class="map-btn" onclick="toggleLayer('conflicts')" id="btn-conflicts" title="Toggle Conflicts">
                     <i class="fas fa-exclamation-triangle"></i>
-                    Conflicts
+                    <span>Conflicts</span>
                 </button>
-                <button class="map-btn active" onclick="toggleLayer('flights')" id="btn-flights" title="Toggle Flight Tracking">
+                <button class="map-btn" onclick="toggleLayer('flights')" id="btn-flights" title="Toggle Flights">
                     <i class="fas fa-plane"></i>
-                    Flights
+                    <span>Flights</span>
                 </button>
                 <button class="map-btn" onclick="toggleHeatmap()" id="btn-heatmap" title="Toggle Heatmap">
                     <i class="fas fa-fire"></i>
-                    Heatmap
+                    <span>Heatmap</span>
                 </button>
-                <button class="map-btn active" onclick="toggleLayer('military')" id="btn-military" title="Toggle Military Bases">
+                <button class="map-btn" onclick="toggleLayer('military')" id="btn-military" title="Toggle Military">
                     <i class="fas fa-shield-alt"></i>
-                    Military
+                    <span>Military</span>
                 </button>
                 <button class="map-btn" onclick="centerMap()" title="Reset View">
                     <i class="fas fa-globe"></i>
-                    Reset
+                    <span>Reset</span>
                 </button>
-            </div>
-            
-            <!-- Map Attribution -->
-            <div style="position: absolute; bottom: 10px; left: 10px; z-index: 1000; background: rgba(0,0,0,0.5); padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; color: var(--text-muted);">
-                Data: ACLED � HDX � OpenSky � VIEWS
             </div>
         </div>
 
         <!-- RIGHT SIDEBAR - Radio, Signals, Helplines -->
-        <div class="sidebar">
+        <div class="sidebar right" id="sidebar-right">
+            <div class="sidebar-header">
+                <h3><i class="fas fa-radio"></i> Emergency Info</h3>
+                <button class="sidebar-close" onclick="toggleSidebar('right')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
             <!-- Radio -->
             <div class="card">
                 <div class="card-header">
@@ -784,13 +803,11 @@
                 </div>
                 <div class="radio-controls">
                     <select id="radioStation" class="radio-select">
-                        <option value="https://stream.live.vc.bbcmedia.co.uk/bbc_world_service">?? BBC World Service (Global)</option>
-                        <option value="https://icecast.radiofrance.fr/fip-midfi.mp3">???? France Inter (France)</option>
-                        <option value="https://nhkworld.webcdn.stream.ne.jp/hls/live/2003459/nhkworld-r1/en/index.m3u8">???? NHK World (Japan)</option>
-                        <option value="https://kcrw.streamguys1.com/kcrw_128k_mp3_aac">???? KCRW (USA)</option>
-                        <option value="https://cbcradiolive.akamaized.net/hls/live/2040959/ES_R1ETR/master.m3u8">???? CBC Radio (Canada)</option>
-                        <option value="https://ice.audionow.com:8000/Kool97FMLive.ogg">???? Kool 97 FM (Jamaica)</option>
-                        <option value="https://abcradiolivehls-lh.akamaihd.net/i/news_1@319354/index_128_a-p.m3u8">???? ABC News (Australia)</option>
+                        <option value="https://stream.live.vc.bbcmedia.co.uk/bbc_world_service">🌍 BBC World Service</option>
+                        <option value="https://icecast.radiofrance.fr/fip-midfi.mp3">🇫🇷 France Inter</option>
+                        <option value="https://nhkworld.webcdn.stream.ne.jp/hls/live/2003459/nhkworld-r1/en/index.m3u8">🇯🇵 NHK World</option>
+                        <option value="https://kcrw.streamguys1.com/kcrw_128k_mp3_aac">🇺🇸 KCRW</option>
+                        <option value="https://cbcradiolive.akamaized.net/hls/live/2040959/ES_R1ETR/master.m3u8">🇨🇦 CBC Radio</option>
                     </select>
                     <button class="radio-btn" onclick="toggleRadio()" id="radioBtn">
                         <i class="fas fa-play"></i>
@@ -807,7 +824,6 @@
                 <div class="card-header">
                     <i class="fas fa-bell"></i>
                     <span>Crisis Signals</span>
-                    <span style="margin-left: auto; font-size: 0.8rem; color: var(--text-muted);">HDX</span>
                 </div>
                 <div id="signals-container">
                     <div class="skeleton"></div>
@@ -819,19 +835,16 @@
                 <div class="card-header">
                     <i class="fas fa-phone-alt"></i>
                     <span>Emergency Helplines</span>
-                    <span style="margin-left: auto; font-size: 0.8rem; color: var(--text-muted);">Via SSEC</span>
                 </div>
                 <select id="countrySelect" class="country-select" onchange="loadHelplines()">
-                    <option value="US">???? United States</option>
-                    <option value="UA">???? Ukraine</option>
-                    <option value="SY">???? Syria</option>
-                    <option value="HT">???? Haiti</option>
-                    <option value="TR">???? Turkey</option>
-                    <option value="AF">???? Afghanistan</option>
-                    <option value="IQ">???? Iraq</option>
-                    <option value="JO">???? Jordan</option>
-                    <option value="LB">???? Lebanon</option>
-                    <option value="YE">???? Yemen</option>
+                    <option value="US">🇺🇸 United States</option>
+                    <option value="UA">🇺🇦 Ukraine</option>
+                    <option value="SY">🇸🇾 Syria</option>
+                    <option value="HT">🇭🇹 Haiti</option>
+                    <option value="TR">🇹🇷 Turkey</option>
+                    <option value="AF">🇦🇫 Afghanistan</option>
+                    <option value="IQ">🇮🇶 Iraq</option>
+                    <option value="YE">🇾🇪 Yemen</option>
                 </select>
                 <div id="helplines-container">
                     <div class="skeleton"></div>
@@ -850,23 +863,19 @@
                         <i class="fas fa-copy"></i>
                     </button>
                 </div>
-                <div style="margin-top: 1rem; font-size: 0.8rem; text-align: center;">
-                    <i class="fas fa-shield-alt"></i> Fund decentralized disaster nodes
-                </div>
-                <div style="margin-top: 0.5rem; font-size: 0.7rem; color: var(--text-muted); text-align: center;">
-                    Next: Raspberry Pi node in Haiti
-                </div>
+                <p style="font-size: 0.7rem; margin-top: 0.5rem; text-align: center;">
+                    Fund decentralized disaster nodes
+                </p>
             </div>
         </div>
     </div>
 
     <footer class="footer">
         <div>
-            <span>ssec�Sentinel v0.3.0</span>
-            <span style="margin: 0 1rem;">|</span>
-            <a href="#"><i class="fab fa-github"></i> GitHub</a>
-            <a href="#"><i class="fas fa-file-alt"></i> API</a>
-            <a href="#"><i class="fas fa-balance-scale"></i> Legal</a>
+            <span>ssec·Sentinel v0.3</span>
+            <span style="margin: 0 0.5rem;">|</span>
+            <a href="#"><i class="fab fa-github"></i></a>
+            <a href="#"><i class="fas fa-file-alt"></i></a>
         </div>
         <div class="eth-footer">
             <i class="fab fa-ethereum"></i> 0x8242...6639
@@ -881,11 +890,10 @@
 
     <!-- Scripts -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script>
     
     <script>
         // ==================== CONFIGURATION ====================
-        const API_BASE = "https://ssec-sentinel.onrender.com";  // Empty for relative URLs on Vercel
+        const API_BASE = 'https://ssec-sentinel.onrender.com';
         let map = L.map('map').setView([20, 0], 2);
         
         // Layers
@@ -903,24 +911,15 @@
         
         // ==================== MAP SETUP ====================
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '� OpenStreetMap, SSEC Humanitarian',
+            attribution: '© OpenStreetMap, SSEC',
             maxZoom: 18
         }).addTo(map);
         
         // Custom icons
         const icons = {
-            conflict: {
-                high: L.divIcon({ 
-                    className: 'conflict-marker',
-                    html: '<div style="background:#ff4444; width:16px; height:16px; border-radius:50%; border:3px solid white; box-shadow:0 0 20px #ff4444;"></div>'
-                }),
-                medium: L.divIcon({ 
-                    html: '<div style="background:#ff8844; width:14px; height:14px; border-radius:50%; border:2px solid white;"></div>'
-                }),
-                low: L.divIcon({ 
-                    html: '<div style="background:#4CAF50; width:12px; height:12px; border-radius:50%; border:2px solid white;"></div>'
-                })
-            },
+            conflict: L.divIcon({ 
+                html: '<div style="background:#ff4444; width:16px; height:16px; border-radius:50%; border:3px solid white;"></div>'
+            }),
             military: L.divIcon({ 
                 html: '<div style="background:#8844ff; width:16px; height:16px; border-radius:4px; border:2px solid white; transform: rotate(45deg);"></div>'
             }),
@@ -932,171 +931,72 @@
             })
         };
         
-        // Add CSS animation
-        const style = document.createElement('style');
-        style.innerHTML = `
-            @keyframes pulse {
-                0% { opacity: 1; transform: scale(1); }
-                50% { opacity: 0.7; transform: scale(1.1); background: #ff6666; }
-                100% { opacity: 1; transform: scale(1); }
-            }
-        `;
-        document.head.appendChild(style);
+        // ==================== UI FUNCTIONS ====================
+        function toggleSidebar(side) {
+            const sidebar = document.getElementById(`sidebar-${side}`);
+            sidebar.classList.toggle('open');
+        }
         
         // ==================== DATA LOADING ====================
-        async function loadConflicts() {
+        async function fetchAPI(endpoint) {
             try {
-                const response = await fetch(`${API_BASE}/api/conflicts`);
-                if (!response.ok) throw new Error('Network response was not ok');
-                const conflicts = await response.json();
-                
-                document.getElementById('conflict-count').innerText = conflicts.length;
-                document.getElementById('conflict-source').innerText = 'ACLED � LIVE';
-                
-                // Clear existing conflicts
-                conflictLayer.clearLayers();
-                
-                // Add conflicts to map
-                if (activeLayers.conflicts) {
-                    conflicts.forEach(c => {
-                        let icon = icons.conflict[c.severity?.toLowerCase() === 'high' ? 'high' : 
-                                               c.severity?.toLowerCase() === 'medium' ? 'medium' : 'low'];
-                        
-                        let marker = L.marker([c.lat, c.lon], { icon })
-                            .bindPopup(`
-                                <div style="min-width:250px;">
-                                    <h3 style="color:${c.color || '#ff4444'};">${c.title || 'Conflict'}</h3>
-                                    <p><strong>Type:</strong> ${c.type || 'Unknown'}</p>
-                                    <p><strong>Fatalities:</strong> ${c.fatalities || 0}</p>
-                                    <p><strong>Actors:</strong> ${c.actors?.actor1 || 'Unknown'} vs ${c.actors?.actor2 || 'Unknown'}</p>
-                                    <p><strong>Description:</strong> ${c.description || 'No description'}</p>
-                                    <p><small>Source: ${c.source || 'ACLED'} � ${new Date(c.timestamp).toLocaleString()}</small></p>
-                                </div>
-                            `)
-                            .addTo(conflictLayer);
-                    });
-                }
-                
-                // Update conflicts list
-                updateConflictsList(conflicts);
-                
+                const response = await fetch(`${API_BASE}${endpoint}`);
+                if (!response.ok) throw new Error('API error');
+                return await response.json();
             } catch (error) {
-                console.error('Error loading conflicts:', error);
-                document.getElementById('conflict-source').innerText = 'ACLED � ERROR';
-                showToast('Error loading conflict data', 'error');
+                console.error(`Error fetching ${endpoint}:`, error);
+                return null;
+            }
+        }
+        
+        async function loadConflicts() {
+            const data = await fetchAPI('/conflicts');
+            if (data) {
+                document.getElementById('conflict-count').innerText = data.length;
+                updateConflictsList(data);
+                updateMapConflicts(data);
             }
         }
         
         async function loadFlights() {
-            try {
-                // Get map bounds to load flights in current view
-                const bounds = map.getBounds();
-                const center = bounds.getCenter();
-                
-                const response = await fetch(`${API_BASE}/api/flights/near?lat=${center.lat}&lon=${center.lng}&radius=500`);
-                if (!response.ok) throw new Error('Network response was not ok');
-                const flights = await response.json();
-                
-                document.getElementById('flight-count').innerText = flights.length;
-                document.getElementById('flight-source').innerText = 'OpenSky � LIVE';
-                
-                // Clear existing flights
-                flightLayer.clearLayers();
-                
-                // Add flights to map
-                if (activeLayers.flights) {
-                    flights.forEach(f => {
-                        if (f.lat && f.lon) {
-                            L.marker([f.lat, f.lon], { 
-                                icon: f.is_emergency ? icons.emergency : icons.flight 
-                            })
-                            .bindPopup(`
-                                <div>
-                                    <b>${f.callsign || 'Unknown'}</b><br>
-                                    Altitude: ${f.altitude || 0} ft<br>
-                                    Speed: ${f.speed || 0} kts<br>
-                                    Squawk: ${f.squawk || '1200'}<br>
-                                    ${f.is_emergency ? '<br><span style="color:#ff4444; font-weight:bold;">?? EMERGENCY SQUAWK 7700</span>' : ''}
-                                    <br><small>Source: ${f.source || 'OpenSky'}</small>
-                                </div>
-                            `)
-                            .addTo(flightLayer);
-                        }
-                    });
-                }
-                
-                // Update flights list
-                updateFlightsList(flights);
-                
-            } catch (error) {
-                console.error('Error loading flights:', error);
-                document.getElementById('flight-source').innerText = 'OpenSky � ERROR';
+            const bounds = map.getBounds();
+            const center = bounds.getCenter();
+            const data = await fetchAPI(`/flights/near?lat=${center.lat}&lon=${center.lng}&radius=500`);
+            if (data) {
+                document.getElementById('flight-count').innerText = data.length;
+                updateFlightsList(data);
+                updateMapFlights(data);
             }
         }
         
         async function loadSignals() {
-            try {
-                const response = await fetch(`${API_BASE}/api/signals`);
-                if (!response.ok) throw new Error('Network response was not ok');
-                const signals = await response.json();
-                
-                document.getElementById('signal-count').innerText = signals.length;
-                updateSignalsList(signals);
-                
-            } catch (error) {
-                console.error('Error loading signals:', error);
-                document.getElementById('signals-container').innerHTML = 
-                    '<div class="error-message">?? HDX Signals temporarily unavailable</div>';
+            const data = await fetchAPI('/signals');
+            if (data) {
+                document.getElementById('signal-count').innerText = data.length;
+                updateSignalsList(data);
             }
         }
         
         async function loadMilitaryBases() {
-            try {
-                const response = await fetch(`${API_BASE}/api/military-bases`);
-                if (!response.ok) throw new Error('Network response was not ok');
-                const bases = await response.json();
-                
-                // Clear existing bases
-                militaryLayer.clearLayers();
-                
-                // Add military bases to map
-                if (activeLayers.military) {
-                    bases.forEach(base => {
-                        if (base.lat && base.lon) {
-                            L.marker([base.lat, base.lon], { icon: icons.military })
-                                .bindPopup(`
-                                    <div>
-                                        <h3>${base.icon || '???'} ${base.name}</h3>
-                                        <p><strong>Type:</strong> ${base.type || 'Military Installation'}</p>
-                                        <p><strong>Country:</strong> ${base.country || 'Unknown'}</p>
-                                        <p><small>Source: ${base.source || 'GlobalThreatMap'}</small></p>
-                                    </div>
-                                `)
-                                .addTo(militaryLayer);
-                        }
-                    });
-                }
-                
-            } catch (error) {
-                console.error('Error loading military bases:', error);
+            const data = await fetchAPI('/military-bases');
+            if (data) {
+                updateMapMilitary(data);
             }
         }
         
-        async function loadHeatmap() {
-            try {
-                const response = await fetch(`${API_BASE}/api/heatmap`);
-                if (!response.ok) throw new Error('Network response was not ok');
-                return await response.json();
-            } catch (error) {
-                console.error('Error loading heatmap:', error);
-                return [];
+        async function loadHelplines() {
+            const country = document.getElementById('countrySelect').value;
+            const data = await fetchAPI(`/helplines?country=${country}`);
+            if (data) {
+                updateHelplinesList(data);
             }
         }
         
+        // ==================== UPDATE FUNCTIONS ====================
         function updateConflictsList(conflicts) {
             const container = document.getElementById('conflicts-container');
             if (!conflicts || conflicts.length === 0) {
-                container.innerHTML = '<div style="color: var(--text-muted); text-align: center;">No active conflicts</div>';
+                container.innerHTML = '<p style="color: var(--text-muted); text-align: center;">No active conflicts</p>';
                 return;
             }
             
@@ -1104,15 +1004,32 @@
                 <div class="conflict-item" style="border-left-color: ${c.color || '#ff4444'};" onclick="flyToLocation(${c.lat}, ${c.lon})">
                     <div class="conflict-header">
                         <span class="conflict-title">${c.title || 'Conflict'}</span>
-                        <span class="conflict-badge" style="background: ${c.color || '#ff4444'};">${c.fatalities || 0} killed</span>
+                        <span class="conflict-badge" style="background: ${c.color || '#ff4444'};">${c.fatalities || 0}</span>
                     </div>
-                    <div class="conflict-details">${c.description?.substring(0, 50) || ''}...</div>
                     <div class="conflict-meta">
                         <span><i class="fas fa-map-marker-alt"></i> ${c.country || 'Unknown'}</span>
-                        <span><i class="fas fa-calendar"></i> ${new Date(c.timestamp).toLocaleDateString()}</span>
                     </div>
                 </div>
             `).join('');
+        }
+        
+        function updateMapConflicts(conflicts) {
+            conflictLayer.clearLayers();
+            if (activeLayers.conflicts) {
+                conflicts.forEach(c => {
+                    if (c.lat && c.lon) {
+                        L.marker([c.lat, c.lon], { icon: icons.conflict })
+                            .bindPopup(`
+                                <div style="min-width:150px;">
+                                    <b>${c.title || 'Conflict'}</b><br>
+                                    Fatalities: ${c.fatalities || 0}<br>
+                                    ${c.country || ''}
+                                </div>
+                            `)
+                            .addTo(conflictLayer);
+                    }
+                });
+            }
         }
         
         function updateFlightsList(flights) {
@@ -1120,106 +1037,75 @@
             const emergency = flights.filter(f => f.is_emergency);
             
             if (emergency.length === 0) {
-                container.innerHTML = '<div style="color: var(--text-muted); text-align: center;">No emergency flights in current view</div>';
+                container.innerHTML = '<p style="color: var(--text-muted); text-align: center;">No emergency flights</p>';
                 return;
             }
             
             container.innerHTML = emergency.slice(0, 5).map(f => `
                 <div class="flight-item emergency" onclick="flyToLocation(${f.lat}, ${f.lon})">
-                    <div>
-                        <div class="flight-callsign">
-                            <i class="fas fa-plane"></i> ${f.callsign || 'Unknown'}
-                        </div>
-                        <div style="font-size:0.8rem;">
-                            ${f.altitude || 0}ft � ${f.speed || 0}kts
-                        </div>
+                    <div class="flight-callsign">
+                        <i class="fas fa-plane"></i> ${f.callsign || 'Unknown'}
                     </div>
-                    <span class="flight-emergency">?? 7700</span>
+                    <span class="flight-emergency">🚨 7700</span>
                 </div>
             `).join('');
+        }
+        
+        function updateMapFlights(flights) {
+            flightLayer.clearLayers();
+            if (activeLayers.flights) {
+                flights.forEach(f => {
+                    if (f.lat && f.lon) {
+                        L.marker([f.lat, f.lon], { 
+                            icon: f.is_emergency ? icons.emergency : icons.flight 
+                        })
+                        .bindPopup(`
+                            <b>${f.callsign || 'Unknown'}</b><br>
+                            Alt: ${f.altitude || 0}ft<br>
+                            ${f.is_emergency ? '<span style="color:#ff4444;">🚨 EMERGENCY</span>' : ''}
+                        `)
+                        .addTo(flightLayer);
+                    }
+                });
+            }
+        }
+        
+        function updateMapMilitary(bases) {
+            militaryLayer.clearLayers();
+            if (activeLayers.military) {
+                bases.forEach(base => {
+                    if (base.lat && base.lon) {
+                        L.marker([base.lat, base.lon], { icon: icons.military })
+                            .bindPopup(`<b>${base.name}</b><br>${base.country}`)
+                            .addTo(militaryLayer);
+                    }
+                });
+            }
         }
         
         function updateSignalsList(signals) {
             const container = document.getElementById('signals-container');
             if (!signals || signals.length === 0) {
-                container.innerHTML = '<div style="color: var(--text-muted); text-align: center;">No active signals</div>';
+                container.innerHTML = '<p style="color: var(--text-muted); text-align: center;">No active signals</p>';
                 return;
             }
             
             container.innerHTML = signals.map(s => `
                 <div class="signal-item ${s.severity || 'medium'}">
                     <div class="signal-header">
-                        <span class="signal-title">${s.headline || 'Alert'}</span>
-                        <span class="signal-severity ${s.severity || 'medium'}">${s.severity?.toUpperCase() || 'MEDIUM'}</span>
-                    </div>
-                    <div style="font-size:0.85rem; margin-bottom:0.5rem;">${s.summary || ''}</div>
-                    <div style="font-size:0.75rem; color: var(--text-muted);">
-                        <i class="fas fa-chart-line"></i> ${s.trend || 'Stable'} � HDX
+                        <span class="signal-title">${s.headline?.substring(0, 30) || 'Alert'}...</span>
+                        <span class="signal-severity ${s.severity || 'medium'}">${s.severity?.toUpperCase() || 'MED'}</span>
                     </div>
                 </div>
             `).join('');
         }
         
-        // ==================== HELPLINES ====================
-        async function loadHelplines() {
-            const country = document.getElementById('countrySelect').value;
-            
-            try {
-                const response = await fetch(`${API_BASE}/api/helplines?country=${country}`);
-                if (!response.ok) throw new Error('Network response was not ok');
-                const helplines = await response.json();
-                
-                const container = document.getElementById('helplines-container');
-                if (helplines.length === 0) {
-                    container.innerHTML = '<div style="color: var(--text-muted); text-align: center;">No helplines found</div>';
-                    return;
-                }
-                
-                container.innerHTML = helplines.map(h => `
-                    <div class="helpline-item">
-                        <div class="helpline-name">${h.name}</div>
-                        <div class="helpline-number">
-                            <i class="fas fa-phone"></i> ${h.number}
-                        </div>
-                        <div class="helpline-available">
-                            <i class="fas fa-clock"></i> ${h.available || '24/7'}
-                        </div>
-                    </div>
-                `).join('');
-                
-            } catch (error) {
-                console.error('Error loading helplines:', error);
-                // Fallback to local database if API fails
-                loadLocalHelplines(country);
-            }
-        }
-        
-        // Local helplines database (backup)
-        const LOCAL_HELPLINES = {
-            US: [
-                { name: '?? 911 Emergency', number: '911', available: '24/7' },
-                { name: '?? 988 Suicide & Crisis', number: '988', available: '24/7' },
-                { name: '?? Red Cross', number: '1-800-733-2767', available: '24/7' },
-                { name: '??? Disaster Distress', number: '1-800-985-5990', available: '24/7' }
-            ],
-            UA: [
-                { name: '?? Emergency', number: '112', available: '24/7' },
-                { name: '?? Ukrainian Red Cross', number: '0 800 332 656', available: '24/7' }
-            ],
-            SY: [
-                { name: '?? Syrian Red Crescent', number: '+963 11 331 0666', available: '24/7' },
-                { name: '?? ICRC Syria', number: '+963 11 331 0667', available: '24/7' }
-            ],
-            HT: [
-                { name: '?? Police', number: '114', available: '24/7' },
-                { name: '?? Ambulance', number: '116', available: '24/7' },
-                { name: '?? Haitian Red Cross', number: '+509 2813 5678', available: '24/7' }
-            ]
-        };
-        
-        function loadLocalHelplines(country) {
+        function updateHelplinesList(helplines) {
             const container = document.getElementById('helplines-container');
-            const helplines = LOCAL_HELPLINES[country] || LOCAL_HELPLINES.US;
+            if (!helplines || helplines.length === 0) {
+                container.innerHTML = '<p style="color: var(--text-muted);">No helplines found</p>';
+                return;
+            }
             
             container.innerHTML = helplines.map(h => `
                 <div class="helpline-item">
@@ -1227,27 +1113,19 @@
                     <div class="helpline-number">
                         <i class="fas fa-phone"></i> ${h.number}
                     </div>
-                    <div class="helpline-available">
-                        <i class="fas fa-clock"></i> ${h.available}
-                    </div>
                 </div>
             `).join('');
-            
-            showToast('Using local helpline database', 'info');
         }
         
         // ==================== LAYER TOGGLES ====================
         function toggleLayer(layer) {
             activeLayers[layer] = !activeLayers[layer];
-            
             const btn = document.getElementById(`btn-${layer}`);
             if (activeLayers[layer]) {
                 btn.classList.add('active');
             } else {
                 btn.classList.remove('active');
             }
-            
-            // Reload appropriate data
             if (layer === 'conflicts') loadConflicts();
             if (layer === 'flights') loadFlights();
             if (layer === 'military') loadMilitaryBases();
@@ -1255,6 +1133,10 @@
         
         function flyToLocation(lat, lon) {
             map.flyTo([lat, lon], 8);
+            if (window.innerWidth < 768) {
+                toggleSidebar('left');
+                toggleSidebar('right');
+            }
         }
         
         function centerMap() {
@@ -1264,7 +1146,6 @@
         // ==================== HEATMAP ====================
         async function toggleHeatmap() {
             const btn = document.getElementById('btn-heatmap');
-            
             if (heatmapLayer) {
                 map.removeLayer(heatmapLayer);
                 heatmapLayer = null;
@@ -1272,27 +1153,16 @@
                 return;
             }
             
-            try {
-                const heatmapData = await loadHeatmap();
-                const points = heatmapData.map(p => [p.lat, p.lon, p.intensity]);
-                
-                if (points.length > 0) {
-                    heatmapLayer = L.heatLayer(points, {
-                        radius: 25,
-                        blur: 15,
-                        maxZoom: 10,
-                        gradient: {0.4: 'blue', 0.6: 'lime', 0.8: 'red'}
-                    }).addTo(map);
-                    
-                    btn.classList.add('active');
-                    showToast('Heatmap loaded from HDX/VIEWS data');
-                } else {
-                    showToast('No heatmap data available', 'error');
-                }
-                
-            } catch (error) {
-                console.error('Error loading heatmap:', error);
-                showToast('Error loading heatmap', 'error');
+            const data = await fetchAPI('/heatmap');
+            if (data && data.length > 0) {
+                const points = data.map(p => [p.lat, p.lon, p.intensity]);
+                heatmapLayer = L.heatLayer(points, {
+                    radius: 20,
+                    blur: 10,
+                    maxZoom: 10,
+                    gradient: {0.4: 'blue', 0.6: 'lime', 0.8: 'red'}
+                }).addTo(map);
+                btn.classList.add('active');
             }
         }
         
@@ -1307,21 +1177,16 @@
                 const station = document.getElementById('radioStation').value;
                 radioPlayer.src = station;
                 radioPlayer.style.display = 'block';
-                
                 radioPlayer.play()
                     .then(() => {
                         isPlaying = true;
                         radioBtn.innerHTML = '<i class="fas fa-stop"></i>';
                         radioBtn.classList.add('stop');
-                        radioStatus.innerHTML = '<i class="fas fa-check-circle" style="color: var(--secondary);"></i> Playing: ' + 
-                            document.getElementById('radioStation').selectedOptions[0].text;
-                        showToast('?? Emergency radio connected');
+                        radioStatus.innerHTML = '<i class="fas fa-check-circle" style="color: var(--secondary);"></i> Playing';
                     })
-                    .catch(err => {
-                        console.error('Radio error:', err);
-                        radioStatus.innerHTML = '<i class="fas fa-exclamation-triangle" style="color: var(--primary);"></i> Cannot play stream';
+                    .catch(() => {
+                        radioStatus.innerHTML = '<i class="fas fa-exclamation-triangle" style="color: var(--primary);"></i> Cannot play';
                         radioPlayer.style.display = 'none';
-                        showToast('Radio stream unavailable', 'error');
                     });
             } else {
                 radioPlayer.pause();
@@ -1336,86 +1201,39 @@
         // ==================== UTILITIES ====================
         async function copyEthAddress() {
             const address = '0x8242f0f25c5445F7822e80d3C9615e57586c6639';
-            try {
-                await navigator.clipboard.writeText(address);
-                
-                const btn = document.querySelector('.copy-btn');
-                btn.innerHTML = '<i class="fas fa-check"></i>';
-                btn.classList.add('copied');
-                showToast('? ETH address copied!');
-                
-                setTimeout(() => {
-                    btn.innerHTML = '<i class="fas fa-copy"></i>';
-                    btn.classList.remove('copied');
-                }, 2000);
-            } catch (err) {
-                showToast('Failed to copy address', 'error');
-            }
+            await navigator.clipboard.writeText(address);
+            showToast('✅ Address copied!');
         }
         
-        function showToast(message, type = 'success') {
+        function showToast(message) {
             const toast = document.getElementById('toast');
-            const toastMessage = document.getElementById('toastMessage');
-            
-            toastMessage.textContent = message;
-            toast.className = 'toast ' + (type === 'error' ? 'error' : '');
+            document.getElementById('toastMessage').textContent = message;
             toast.classList.add('show');
-            
-            setTimeout(() => {
-                toast.classList.remove('show');
-            }, 3000);
+            setTimeout(() => toast.classList.remove('show'), 3000);
         }
         
         async function refreshAll() {
             const btn = document.querySelector('.refresh-btn');
-            btn.innerHTML = '<i class="fas fa-sync-alt fa-spin"></i> Loading...';
-            
+            btn.innerHTML = '<i class="fas fa-sync-alt fa-spin"></i>';
             await Promise.all([
                 loadConflicts(),
                 loadFlights(),
                 loadSignals(),
-                loadMilitaryBases()
+                loadMilitaryBases(),
+                loadHelplines()
             ]);
-            
             btn.innerHTML = '<i class="fas fa-sync-alt"></i> Refresh';
-            showToast('? All data refreshed');
+            showToast('✅ Data refreshed');
         }
         
-        // ==================== MAP EVENT HANDLERS ====================
+        // ==================== MAP CLICK ====================
         map.on('click', async function(e) {
             const { lat, lng } = e.latlng;
-            
-            // Load flights near clicked location
-            try {
-                const response = await fetch(`${API_BASE}/api/flights/near?lat=${lat}&lon=${lng}&radius=200`);
-                const flights = await response.json();
-                
-                updateFlightsList(flights);
-                
-                // Show popup with location info
-                L.popup()
-                    .setLatLng([lat, lng])
-                    .setContent(`
-                        <b>Location</b><br>
-                        Lat: ${lat.toFixed(4)}<br>
-                        Lon: ${lng.toFixed(4)}<br>
-                        <small>Click refresh to see nearby flights</small>
-                    `)
-                    .openOn(map);
-                
-            } catch (error) {
-                console.error('Error loading flights for location:', error);
-            }
+            const data = await fetchAPI(`/flights/near?lat=${lat}&lon=${lng}&radius=200`);
+            if (data) updateFlightsList(data);
         });
         
-        map.on('moveend', function() {
-            // Reload flights when map stops moving (for current view)
-            if (activeLayers.flights) {
-                loadFlights();
-            }
-        });
-        
-        // ==================== INITIAL LOAD ====================
+        // ==================== INIT ====================
         document.addEventListener('DOMContentLoaded', () => {
             loadConflicts();
             loadFlights();
@@ -1423,11 +1241,9 @@
             loadMilitaryBases();
             loadHelplines();
             
-            // Auto-refresh every 60 seconds
             setInterval(() => {
-                if (activeLayers.conflicts) loadConflicts();
-                if (activeLayers.flights) loadFlights();
-                if (activeLayers.military) loadMilitaryBases();
+                loadConflicts();
+                loadFlights();
                 loadSignals();
             }, 60000);
         });
