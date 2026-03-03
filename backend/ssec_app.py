@@ -1,66 +1,121 @@
-﻿"""ssec-Sentinel Main Application - COMPLETE VERSION WITH ALL ENDPOINTS"""
+"""ssec-Sentinel Main Application - Fixed Version"""
 import sys
 import os
+import logging
 from pathlib import Path
 from datetime import datetime, timedelta
 from typing import Optional, List
 import asyncio
 import random
+import traceback
 
-# Add path
-backend_dir = Path(__file__).parent
-sys.path.append(str(backend_dir))
-
-from fastapi import FastAPI, HTTPException, BackgroundTasks
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, Response
-import uvicorn
-
-# Import all collectors
-from collectors.ssec_acled import ACLEDCollector
-from collectors.ssec_hdx import HDXCollector
-from collectors.ssec_views import VIEWSCollector
-from collectors.ssec_signals import HDXSignalsCollector
-from collectors.ssec_military import MilitaryBasesCollector
-from collectors.ssec_helplines_enhanced import EnhancedHelplinesCollector
-from collectors.ssec_flights import FlightCollector
-from collectors.ssec_heatmap import HeatmapCollector
-from ssec_config import config
-
-# Initialize collectors
-acled = ACLEDCollector(config.ACLED_USERNAME, config.ACLED_PASSWORD)
-hdx = HDXCollector()
-views = VIEWSCollector()
-signals = HDXSignalsCollector()
-military = MilitaryBasesCollector()
-helplines = EnhancedHelplinesCollector()
-flights = FlightCollector()
-heatmap = HeatmapCollector()
-
-# Create FastAPI app
-app = FastAPI(
-    title="ssec-Sentinel API",
-    description="Emergency Intelligence Platform with War Zone Monitoring",
-    version="0.3.0",
+# Setup logging immediately
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    stream=sys.stdout
 )
+logger = logging.getLogger(__name__)
 
-# Configure CORS
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+try:
+    logger.info("Starting ssec-Sentinel...")
+    
+    # Add path
+    backend_dir = Path(__file__).parent
+    if str(backend_dir) not in sys.path:
+        sys.path.append(str(backend_dir))
+    logger.info(f"Added {backend_dir} to path")
+    
+    from fastapi import FastAPI, HTTPException, BackgroundTasks
+    from fastapi.middleware.cors import CORSMiddleware
+    from fastapi.responses import JSONResponse, Response
+    import uvicorn
+    
+    logger.info("Imported core modules")
+    
+    # Import collectors with error handling
+    collectors = {}
+    collector_classes = [
+        ("ssec_acled", "ACLEDCollector", ["ACLED_USERNAME", "ACLED_PASSWORD"]),
+        ("ssec_hdx", "HDXCollector", []),
+        ("ssec_views", "VIEWSCollector", []),
+        ("ssec_signals", "HDXSignalsCollector", []),
+        ("ssec_military", "MilitaryBasesCollector", []),
+        ("ssec_helplines_enhanced", "EnhancedHelplinesCollector", []),
+        ("ssec_flights", "FlightCollector", []),
+        ("ssec_heatmap", "HeatmapCollector", [])
+    ]
+    
+    for module_name, class_name, config_params in collector_classes:
+        try:
+            module = __import__(f"collectors.{module_name}", fromlist=[class_name])
+            collector_class = getattr(module, class_name)
+            
+            # Initialize with config params if needed
+            if config_params:
+                from ssec_config import config
+                args = [getattr(config, param) for param in config_params]
+                collectors[class_name] = collector_class(*args)
+            else:
+                collectors[class_name] = collector_class()
+                
+            logger.info(f"✓ Imported and initialized {class_name}")
+        except Exception as e:
+            logger.error(f"Failed to import {class_name}: {e}")
+            collectors[class_name] = None
+    
+    from ssec_config import config
+    logger.info("Imported config")
+    
+    # Assign collectors to variables for backward compatibility
+    acled = collectors.get("ACLEDCollector")
+    hdx = collectors.get("HDXCollector")
+    views = collectors.get("VIEWSCollector")
+    signals = collectors.get("HDXSignalsCollector")
+    military = collectors.get("MilitaryBasesCollector")
+    helplines = collectors.get("EnhancedHelplinesCollector")
+    flights = collectors.get("FlightCollector")
+    heatmap = collectors.get("HeatmapCollector")
+    
+    # Check which collectors are available
+    available_collectors = {name: collector is not None for name, collector in collectors.items()}
+    logger.info(f"Available collectors: {available_collectors}")
+    
+    # Create FastAPI app
+    app = FastAPI(
+        title="ssec-Sentinel API",
+        description="Emergency Intelligence Platform with War Zone Monitoring",
+        version="0.3.0",
+    )
+    logger.info("✓ FastAPI app created")
+    
+    # Configure CORS
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+    logger.info("✓ CORS configured")
+    
+except Exception as e:
+    logger.error(f"FATAL: Failed to start application: {e}")
+    logger.error(traceback.format_exc())
+    sys.exit(1)
 
 # ==================== ROOT ENDPOINT ====================
 @app.get("/")
+@app.get("/api")
+@app.get("/ssec")
 async def root():
     """Root endpoint with API information"""
     return {
         "message": "ssec-Sentinel API",
         "version": "0.3.0",
         "status": "operational",
+        "collectors": {name: "available" if status else "unavailable" 
+                      for name, status in available_collectors.items()},
         "endpoints": [
             "/",
             "/health",
@@ -77,6 +132,8 @@ async def root():
             "/api/military-bases",
             "/helplines",
             "/api/helplines",
+            "/dashboard",
+            "/api/dashboard",
             "/docs",
             "/redoc"
         ]
@@ -93,15 +150,7 @@ async def health_check():
         "timestamp": datetime.utcnow().isoformat(),
         "version": "0.3.0",
         "service": "ssec-sentinel",
-        "collectors": {
-            "acled": bool(config.ACLED_API_KEY and config.ACLED_API_KEY != "demo_key"),
-            "hdx": True,
-            "views": True,
-            "signals": True,
-            "military": True,
-            "flights": True,
-            "heatmap": True
-        }
+        "collectors": available_collectors
     }
 
 # ==================== CONFLICT ENDPOINTS ====================
@@ -115,23 +164,26 @@ async def get_conflicts(
     event_type: Optional[str] = None
 ):
     """Get conflict events from ACLED"""
-    try:
-        events = await acled.fetch_conflicts(
-            country=country,
-            days_back=days,
-            min_fatalities=min_fatalities
-        )
-        
-        # Format for dashboard
-        formatted = [acled.format_for_dashboard(e) for e in events]
-        
-        # Filter by event type if specified
-        if event_type:
-            formatted = [e for e in formatted if e["type"] == event_type]
-        
-        return formatted
-    except Exception as e:
-        # Return mock data if ACLED fails
+    if acled and available_collectors["ACLEDCollector"]:
+        try:
+            events = await acled.fetch_conflicts(
+                country=country,
+                days_back=days,
+                min_fatalities=min_fatalities
+            )
+            
+            # Format for dashboard
+            formatted = [acled.format_for_dashboard(e) for e in events]
+            
+            # Filter by event type if specified
+            if event_type:
+                formatted = [e for e in formatted if e["type"] == event_type]
+            
+            return formatted
+        except Exception as e:
+            logger.error(f"Error fetching conflicts: {e}")
+            return get_mock_conflicts()
+    else:
         return get_mock_conflicts()
 
 @app.get("/conflicts/stats")
@@ -139,10 +191,14 @@ async def get_conflicts(
 @app.get("/ssec/api/conflicts/stats")
 async def get_conflict_stats(country: Optional[str] = None):
     """Get conflict statistics"""
-    try:
-        stats = await acled.get_conflict_stats(country)
-        return stats
-    except Exception as e:
+    if acled and available_collectors["ACLEDCollector"]:
+        try:
+            stats = await acled.get_conflict_stats(country)
+            return stats
+        except Exception as e:
+            logger.error(f"Error fetching conflict stats: {e}")
+            return get_mock_conflict_stats()
+    else:
         return get_mock_conflict_stats()
 
 @app.get("/conflicts/hotspots")
@@ -150,29 +206,33 @@ async def get_conflict_stats(country: Optional[str] = None):
 @app.get("/ssec/api/conflicts/hotspots")
 async def get_hotspots(threshold: int = 10):
     """Get conflict hotspots (areas with most fatalities)"""
-    try:
-        events = await acled.fetch_conflicts(days_back=30)
-        
-        # Group by location
-        hotspots = {}
-        for e in events:
-            loc = f"{e.get('latitude')},{e.get('longitude')}"
-            if loc not in hotspots:
-                hotspots[loc] = {
-                    "lat": e.get("latitude"),
-                    "lon": e.get("longitude"),
-                    "fatalities": 0,
-                    "events": 0,
-                    "location": e.get("location")
-                }
-            hotspots[loc]["fatalities"] += int(e.get("fatalities", 0))
-            hotspots[loc]["events"] += 1
-        
-        # Filter by threshold
-        result = [h for h in hotspots.values() if h["fatalities"] >= threshold]
-        return sorted(result, key=lambda x: x["fatalities"], reverse=True)
-        
-    except Exception as e:
+    if acled and available_collectors["ACLEDCollector"]:
+        try:
+            events = await acled.fetch_conflicts(days_back=30)
+            
+            # Group by location
+            hotspots = {}
+            for e in events:
+                loc = f"{e.get('latitude')},{e.get('longitude')}"
+                if loc not in hotspots:
+                    hotspots[loc] = {
+                        "lat": e.get("latitude"),
+                        "lon": e.get("longitude"),
+                        "fatalities": 0,
+                        "events": 0,
+                        "location": e.get("location")
+                    }
+                hotspots[loc]["fatalities"] += int(e.get("fatalities", 0))
+                hotspots[loc]["events"] += 1
+            
+            # Filter by threshold
+            result = [h for h in hotspots.values() if h["fatalities"] >= threshold]
+            return sorted(result, key=lambda x: x["fatalities"], reverse=True)
+            
+        except Exception as e:
+            logger.error(f"Error fetching hotspots: {e}")
+            return get_mock_hotspots()
+    else:
         return get_mock_hotspots()
 
 # ==================== FLIGHT TRACKING ENDPOINTS ====================
@@ -186,43 +246,54 @@ async def get_flights_near(
     emergency_only: bool = False
 ):
     """Get flights near specific coordinates"""
-    try:
-        flights_near = await flights.get_flights_near_location(lat, lon, radius)
-        
-        if emergency_only:
-            flights_near = [f for f in flights_near if f.get("is_emergency")]
-        
-        formatted = [flights.format_for_map(f) for f in flights_near]
-        return formatted
-    except Exception as e:
-        # Return mock data
-        return flights._get_mock_flights(lat, lon, radius)
+    if flights and available_collectors["FlightCollector"]:
+        try:
+            flights_near = await flights.get_flights_near_location(lat, lon, radius)
+            
+            if emergency_only:
+                flights_near = [f for f in flights_near if f.get("is_emergency")]
+            
+            formatted = [flights.format_for_map(f) for f in flights_near]
+            return formatted
+        except Exception as e:
+            logger.error(f"Error fetching flights: {e}")
+            return flights._get_mock_flights(lat, lon, radius) if flights else get_mock_flights(lat, lon, radius)
+    else:
+        return get_mock_flights(lat, lon, radius)
 
 @app.get("/flights/emergency")
 @app.get("/api/flights/emergency")
 @app.get("/ssec/api/flights/emergency")
 async def get_emergency_flights():
     """Get all flights with emergency squawk codes"""
-    try:
-        emergency = await flights.get_emergency_flights()
-        return [flights.format_for_map(f) for f in emergency]
-    except Exception as e:
-        # Generate mock emergency flights
-        mocks = flights._get_mock_flights(20, 0, 500)
-        return [flights.format_for_map(f) for f in mocks if f.get("is_emergency")]
+    if flights and available_collectors["FlightCollector"]:
+        try:
+            emergency = await flights.get_emergency_flights()
+            return [flights.format_for_map(f) for f in emergency]
+        except Exception as e:
+            logger.error(f"Error fetching emergency flights: {e}")
+            mocks = flights._get_mock_flights(20, 0, 500) if flights else get_mock_flights(20, 0, 500)
+            return [flights.format_for_map(f) for f in mocks if f.get("is_emergency")] if flights else mocks
+    else:
+        return [f for f in get_mock_flights(20, 0, 500) if f.get("is_emergency")]
 
 @app.get("/flights/near-disaster/{disaster_id}")
 @app.get("/api/flights/near-disaster/{disaster_id}")
 @app.get("/ssec/api/flights/near-disaster/{disaster_id}")
 async def get_flights_near_disaster(disaster_id: str, radius: float = 100):
     """Get flights near a specific disaster"""
-    # This would normally look up the disaster coordinates
-    # For now, return mock data around Caribbean
-    flights_near = flights._get_mock_flights(18.5, -77.2, radius)
+    if flights and available_collectors["FlightCollector"]:
+        try:
+            flights_near = flights._get_mock_flights(18.5, -77.2, radius)
+        except:
+            flights_near = get_mock_flights(18.5, -77.2, radius)
+    else:
+        flights_near = get_mock_flights(18.5, -77.2, radius)
+    
     return {
         "disaster_id": disaster_id,
         "aircraft_count": len(flights_near),
-        "aircraft": [flights.format_for_map(f) for f in flights_near]
+        "aircraft": flights_near
     }
 
 # ==================== HEATMAP ENDPOINTS ====================
@@ -235,14 +306,18 @@ async def get_heatmap(
     points: int = 100
 ):
     """Get heatmap data for disasters and conflicts"""
-    try:
-        data = heatmap.generate_heatmap_data(
-            disaster_type=disaster_type,
-            days=days,
-            points=points
-        )
-        return data
-    except Exception as e:
+    if heatmap and available_collectors["HeatmapCollector"]:
+        try:
+            data = heatmap.generate_heatmap_data(
+                disaster_type=disaster_type,
+                days=days,
+                points=points
+            )
+            return data
+        except Exception as e:
+            logger.error(f"Error generating heatmap: {e}")
+            return get_mock_heatmap()
+    else:
         return get_mock_heatmap()
 
 @app.get("/heatmap/conflicts")
@@ -250,9 +325,13 @@ async def get_heatmap(
 @app.get("/ssec/api/heatmap/conflicts")
 async def get_conflict_heatmap(min_intensity: float = 0.7):
     """Get conflict-specific heatmap"""
-    try:
-        return heatmap.get_conflict_hotspots(min_intensity)
-    except Exception as e:
+    if heatmap and available_collectors["HeatmapCollector"]:
+        try:
+            return heatmap.get_conflict_hotspots(min_intensity)
+        except Exception as e:
+            logger.error(f"Error generating conflict heatmap: {e}")
+            return [p for p in get_mock_heatmap() if random.random() > 0.5]
+    else:
         return [p for p in get_mock_heatmap() if random.random() > 0.5]
 
 @app.get("/heatmap/natural")
@@ -260,9 +339,13 @@ async def get_conflict_heatmap(min_intensity: float = 0.7):
 @app.get("/ssec/api/heatmap/natural")
 async def get_natural_disaster_heatmap():
     """Get natural disaster heatmap"""
-    try:
-        return heatmap.get_natural_disaster_hotspots()
-    except Exception as e:
+    if heatmap and available_collectors["HeatmapCollector"]:
+        try:
+            return heatmap.get_natural_disaster_hotspots()
+        except Exception as e:
+            logger.error(f"Error generating natural disaster heatmap: {e}")
+            return get_mock_heatmap()
+    else:
         return get_mock_heatmap()
 
 @app.get("/heatmap/grid")
@@ -270,9 +353,13 @@ async def get_natural_disaster_heatmap():
 @app.get("/ssec/api/heatmap/grid")
 async def get_heatmap_grid(resolution: float = 0.5):
     """Get density grid for raster heatmap"""
-    try:
-        return heatmap.get_density_grid(resolution)
-    except Exception as e:
+    if heatmap and available_collectors["HeatmapCollector"]:
+        try:
+            return heatmap.get_density_grid(resolution)
+        except Exception as e:
+            logger.error(f"Error generating heatmap grid: {e}")
+            return get_mock_grid()
+    else:
         return get_mock_grid()
 
 @app.get("/heatmap/timeline")
@@ -280,9 +367,13 @@ async def get_heatmap_grid(resolution: float = 0.5):
 @app.get("/ssec/api/heatmap/timeline")
 async def get_heatmap_timeline(hours: int = 24):
     """Get time-series heatmap data"""
-    try:
-        return heatmap.get_time_series(hours)
-    except Exception as e:
+    if heatmap and available_collectors["HeatmapCollector"]:
+        try:
+            return heatmap.get_time_series(hours)
+        except Exception as e:
+            logger.error(f"Error generating heatmap timeline: {e}")
+            return get_mock_timeline(hours)
+    else:
         return get_mock_timeline(hours)
 
 @app.get("/heatmap/stats")
@@ -290,17 +381,14 @@ async def get_heatmap_timeline(hours: int = 24):
 @app.get("/ssec/api/heatmap/stats")
 async def get_heatmap_stats():
     """Get heatmap statistics"""
-    try:
-        return heatmap.get_statistics()
-    except Exception as e:
-        return {
-            "total_points": 500,
-            "by_type": {"conflict": 300, "earthquake": 100, "flood": 100},
-            "avg_intensity": 0.75,
-            "max_intensity": 0.95,
-            "min_intensity": 0.3,
-            "active_zones": 12
-        }
+    if heatmap and available_collectors["HeatmapCollector"]:
+        try:
+            return heatmap.get_statistics()
+        except Exception as e:
+            logger.error(f"Error getting heatmap stats: {e}")
+            return get_mock_heatmap_stats()
+    else:
+        return get_mock_heatmap_stats()
 
 # ==================== HDX HUMANITARIAN DATA ====================
 @app.get("/displacement")
@@ -308,10 +396,14 @@ async def get_heatmap_stats():
 @app.get("/ssec/api/displacement")
 async def get_displacement(country: Optional[str] = None):
     """Get displacement data from HDX"""
-    try:
-        data = await hdx.get_displacement(country)
-        return [hdx.format_alert(d) for d in data]
-    except Exception as e:
+    if hdx and available_collectors["HDXCollector"]:
+        try:
+            data = await hdx.get_displacement(country)
+            return [hdx.format_alert(d) for d in data]
+        except Exception as e:
+            logger.error(f"Error fetching displacement data: {e}")
+            return get_mock_displacement()
+    else:
         return get_mock_displacement()
 
 @app.get("/food-security")
@@ -319,9 +411,13 @@ async def get_displacement(country: Optional[str] = None):
 @app.get("/ssec/api/food-security")
 async def get_food_security(country: Optional[str] = None):
     """Get food security data"""
-    try:
-        return await hdx.get_food_security(country)
-    except Exception as e:
+    if hdx and available_collectors["HDXCollector"]:
+        try:
+            return await hdx.get_food_security(country)
+        except Exception as e:
+            logger.error(f"Error fetching food security data: {e}")
+            return get_mock_food_security()
+    else:
         return get_mock_food_security()
 
 # ==================== VIEWS FORECASTS ====================
@@ -330,10 +426,14 @@ async def get_food_security(country: Optional[str] = None):
 @app.get("/ssec/api/forecasts")
 async def get_forecasts(country: Optional[str] = None):
     """Get conflict risk forecasts"""
-    try:
-        forecasts = await views.get_forecasts(country)
-        return forecasts
-    except Exception as e:
+    if views and available_collectors["VIEWSCollector"]:
+        try:
+            forecasts = await views.get_forecasts(country)
+            return forecasts
+        except Exception as e:
+            logger.error(f"Error fetching forecasts: {e}")
+            return get_mock_forecasts()
+    else:
         return get_mock_forecasts()
 
 @app.get("/forecasts/heatmap")
@@ -341,16 +441,20 @@ async def get_forecasts(country: Optional[str] = None):
 @app.get("/ssec/api/forecasts/heatmap")
 async def get_forecast_heatmap():
     """Get forecast data formatted for heatmap"""
-    try:
-        forecasts = await views.get_forecasts()
-        heatmap_data = [{
-            "lat": f["lat"],
-            "lon": f["lon"],
-            "intensity": f["risk_score"] / 100,
-            "color": views.get_risk_color(f["risk_score"])
-        } for f in forecasts if f.get("lat") and f.get("lon")]
-        return heatmap_data
-    except Exception as e:
+    if views and available_collectors["VIEWSCollector"]:
+        try:
+            forecasts = await views.get_forecasts()
+            heatmap_data = [{
+                "lat": f["lat"],
+                "lon": f["lon"],
+                "intensity": f["risk_score"] / 100,
+                "color": views.get_risk_color(f["risk_score"])
+            } for f in forecasts if f.get("lat") and f.get("lon")]
+            return heatmap_data
+        except Exception as e:
+            logger.error(f"Error generating forecast heatmap: {e}")
+            return get_mock_forecast_heatmap()
+    else:
         return get_mock_forecast_heatmap()
 
 # ==================== HDX SIGNALS ====================
@@ -359,10 +463,14 @@ async def get_forecast_heatmap():
 @app.get("/ssec/api/signals")
 async def get_signals(severity: Optional[str] = None):
     """Get automated crisis alerts"""
-    try:
-        alerts = await signals.get_signals(severity)
-        return alerts
-    except Exception as e:
+    if signals and available_collectors["HDXSignalsCollector"]:
+        try:
+            alerts = await signals.get_signals(severity)
+            return alerts
+        except Exception as e:
+            logger.error(f"Error fetching signals: {e}")
+            return get_mock_signals()
+    else:
         return get_mock_signals()
 
 @app.get("/signals/check")
@@ -370,23 +478,27 @@ async def get_signals(severity: Optional[str] = None):
 @app.get("/ssec/api/signals/check")
 async def check_new_signals(background_tasks: BackgroundTasks):
     """Check for new alerts since last check"""
-    try:
-        last_check = datetime.utcnow() - timedelta(minutes=5)
-        new_alerts = await signals.check_for_new_alerts(last_check)
-        
-        if new_alerts:
-            background_tasks.add_task(notify_new_alerts, new_alerts)
-        
-        return {
-            "new_alerts": len(new_alerts),
-            "alerts": new_alerts
-        }
-    except Exception as e:
+    if signals and available_collectors["HDXSignalsCollector"]:
+        try:
+            last_check = datetime.utcnow() - timedelta(minutes=5)
+            new_alerts = await signals.check_for_new_alerts(last_check)
+            
+            if new_alerts:
+                background_tasks.add_task(notify_new_alerts, new_alerts)
+            
+            return {
+                "new_alerts": len(new_alerts),
+                "alerts": new_alerts
+            }
+        except Exception as e:
+            logger.error(f"Error checking new signals: {e}")
+            return {"new_alerts": 0, "alerts": []}
+    else:
         return {"new_alerts": 0, "alerts": []}
 
 async def notify_new_alerts(alerts):
     """Send notifications for new alerts"""
-    print(f"New alerts: {len(alerts)}")
+    logger.info(f"New alerts: {len(alerts)}")
 
 # ==================== MILITARY BASES ====================
 @app.get("/military-bases")
@@ -394,11 +506,15 @@ async def notify_new_alerts(alerts):
 @app.get("/ssec/api/military-bases")
 async def get_military_bases(country: Optional[str] = None):
     """Get military installations"""
-    try:
-        if country:
-            return military.get_bases_by_country(country)
-        return military.get_all_bases()
-    except Exception as e:
+    if military and available_collectors["MilitaryBasesCollector"]:
+        try:
+            if country:
+                return military.get_bases_by_country(country)
+            return military.get_all_bases()
+        except Exception as e:
+            logger.error(f"Error fetching military bases: {e}")
+            return get_mock_military_bases()
+    else:
         return get_mock_military_bases()
 
 @app.get("/military-bases/near")
@@ -406,9 +522,13 @@ async def get_military_bases(country: Optional[str] = None):
 @app.get("/ssec/api/military-bases/near")
 async def get_bases_near_conflict(lat: float, lon: float, radius: float = 500):
     """Find military bases near conflict zone"""
-    try:
-        return military.get_bases_near_conflict(lat, lon, radius)
-    except Exception as e:
+    if military and available_collectors["MilitaryBasesCollector"]:
+        try:
+            return military.get_bases_near_conflict(lat, lon, radius)
+        except Exception as e:
+            logger.error(f"Error fetching nearby bases: {e}")
+            return get_mock_bases_near(lat, lon)
+    else:
         return get_mock_bases_near(lat, lon)
 
 # ==================== ENHANCED HELPLINES ====================
@@ -417,14 +537,18 @@ async def get_bases_near_conflict(lat: float, lon: float, radius: float = 500):
 @app.get("/ssec/api/helplines")
 async def get_helplines(country: str = "US", helpline_type: Optional[str] = None):
     """Get crisis helplines by country"""
-    try:
-        helplines_list = helplines.get_helplines(country)
-        
-        if helpline_type:
-            helplines_list = [h for h in helplines_list if h["type"] == helpline_type]
-        
-        return helplines_list
-    except Exception as e:
+    if helplines and available_collectors["EnhancedHelplinesCollector"]:
+        try:
+            helplines_list = helplines.get_helplines(country)
+            
+            if helpline_type:
+                helplines_list = [h for h in helplines_list if h["type"] == helpline_type]
+            
+            return helplines_list
+        except Exception as e:
+            logger.error(f"Error fetching helplines: {e}")
+            return get_mock_helplines(country)
+    else:
         return get_mock_helplines(country)
 
 @app.get("/helplines/search")
@@ -432,9 +556,13 @@ async def get_helplines(country: str = "US", helpline_type: Optional[str] = None
 @app.get("/ssec/api/helplines/search")
 async def search_helplines(query: str):
     """Search helplines by name or number"""
-    try:
-        return helplines.search_helplines(query)
-    except Exception as e:
+    if helplines and available_collectors["EnhancedHelplinesCollector"]:
+        try:
+            return helplines.search_helplines(query)
+        except Exception as e:
+            logger.error(f"Error searching helplines: {e}")
+            return []
+    else:
         return []
 
 @app.get("/helplines/countries")
@@ -442,78 +570,29 @@ async def search_helplines(query: str):
 @app.get("/ssec/api/helplines/countries")
 async def get_available_countries():
     """Get list of countries with helpline data"""
-    try:
-        return helplines.get_all_countries()
-    except Exception as e:
+    if helplines and available_collectors["EnhancedHelplinesCollector"]:
+        try:
+            return helplines.get_all_countries()
+        except Exception as e:
+            logger.error(f"Error getting countries: {e}")
+            return ["US", "UK", "UA", "SY", "HT"]
+    else:
         return ["US", "UK", "UA", "SY", "HT"]
 
 # ==================== MOCK DISASTER DATA ====================
 @app.get("/disasters")
 @app.get("/api/disasters")
 @app.get("/ssec/api/disasters")
-async def get_mock_disasters():
+async def get_mock_disasters_endpoint():
     """Mock disaster data"""
-    return [
-        {
-            "id": "EQ12345",
-            "name": "Earthquake - Caribbean Sea",
-            "type": "Earthquake",
-            "lat": 18.5,
-            "lon": -77.2,
-            "alertLevel": "RED",
-            "startTime": datetime.utcnow().isoformat(),
-            "description": "Magnitude 6.7 earthquake near Jamaica"
-        },
-        {
-            "id": "TC67890",
-            "name": "Tropical Storm - Gulf of Mexico",
-            "type": "Cyclone",
-            "lat": 25.3,
-            "lon": -86.5,
-            "alertLevel": "ORANGE",
-            "startTime": datetime.utcnow().isoformat(),
-            "description": "Category 1 hurricane approaching coast"
-        },
-        {
-            "id": "FL54321",
-            "name": "Flooding - Southeast Asia",
-            "type": "Flood",
-            "lat": 14.5,
-            "lon": 108.2,
-            "alertLevel": "GREEN",
-            "startTime": datetime.utcnow().isoformat(),
-            "description": "Monsoon flooding in Vietnam"
-        }
-    ]
+    return get_mock_disasters()
 
 @app.get("/news")
 @app.get("/api/news")
 @app.get("/ssec/api/news")
-async def get_mock_news():
+async def get_mock_news_endpoint():
     """Mock news data"""
-    return [
-        {
-            "title": "7.2 Earthquake Hits Caribbean",
-            "source": "ReliefWeb",
-            "timestamp": datetime.utcnow().isoformat(),
-            "url": "#",
-            "summary": "Major earthquake triggers tsunami warnings"
-        },
-        {
-            "title": "Humanitarian Aid Reaches Flood Victims",
-            "source": "UN OCHA",
-            "timestamp": datetime.utcnow().isoformat(),
-            "url": "#",
-            "summary": "Emergency supplies distributed in affected regions"
-        },
-        {
-            "title": "Conflict Escalates: Civilians Urged to Evacuate",
-            "source": "ICRC",
-            "timestamp": datetime.utcnow().isoformat(),
-            "url": "#",
-            "summary": "Humanitarian corridor established"
-        }
-    ]
+    return get_mock_news()
 
 # ==================== COMPREHENSIVE DASHBOARD DATA ====================
 @app.get("/dashboard")
@@ -523,54 +602,80 @@ async def get_dashboard_data(country: Optional[str] = None):
     """Get all data for dashboard in one request"""
     try:
         # Fetch all data concurrently
-        conflicts_task = acled.fetch_conflicts(country, days_back=7) if config.ACLED_API_KEY != "demo_key" else None
-        signals_task = signals.get_signals()
-        forecasts_task = views.get_forecasts(country)
-        bases_task = asyncio.to_thread(military.get_all_bases)
-        flights_task = flights.get_flights_near_location(20, 0, 500)
-        heatmap_task = asyncio.to_thread(heatmap.generate_heatmap_data, None, 30, 100)
+        tasks = []
+        
+        # Conflicts
+        if acled and available_collectors["ACLEDCollector"] and config.ACLED_API_KEY != "demo_key":
+            tasks.append(acled.fetch_conflicts(country, days_back=7))
+        else:
+            tasks.append(get_mock_conflicts())
+        
+        # Signals
+        if signals and available_collectors["HDXSignalsCollector"]:
+            tasks.append(signals.get_signals())
+        else:
+            tasks.append(get_mock_signals())
+        
+        # Forecasts
+        if views and available_collectors["VIEWSCollector"]:
+            tasks.append(views.get_forecasts(country))
+        else:
+            tasks.append(get_mock_forecasts())
+        
+        # Bases
+        if military and available_collectors["MilitaryBasesCollector"]:
+            tasks.append(asyncio.to_thread(military.get_all_bases))
+        else:
+            tasks.append(get_mock_military_bases())
+        
+        # Flights
+        if flights and available_collectors["FlightCollector"]:
+            tasks.append(flights.get_flights_near_location(20, 0, 500))
+        else:
+            tasks.append(get_mock_flights(20, 0, 500))
+        
+        # Heatmap
+        if heatmap and available_collectors["HeatmapCollector"]:
+            tasks.append(asyncio.to_thread(heatmap.generate_heatmap_data, None, 30, 100))
+        else:
+            tasks.append(get_mock_heatmap())
         
         # Gather results
-        results = await asyncio.gather(
-            signals_task,
-            forecasts_task,
-            bases_task,
-            flights_task,
-            heatmap_task,
-            return_exceptions=True
-        )
+        results = await asyncio.gather(*tasks, return_exceptions=True)
         
-        signals_list, forecasts_list, bases, flights_near, heatmap_data = results
+        # Handle results
+        conflicts_result, signals_result, forecasts_result, bases_result, flights_result, heatmap_result = results
         
-        # Handle conflicts separately
-        if conflicts_task:
-            conflicts = await conflicts_task
-            formatted_conflicts = [acled.format_for_dashboard(c) for c in conflicts]
-        else:
-            formatted_conflicts = await get_mock_disasters()
+        # Handle exceptions
+        formatted_conflicts = conflicts_result if not isinstance(conflicts_result, Exception) else get_mock_conflicts()
+        signals_list = signals_result if not isinstance(signals_result, Exception) else get_mock_signals()
+        forecasts_list = forecasts_result if not isinstance(forecasts_result, Exception) else get_mock_forecasts()
+        bases = bases_result if not isinstance(bases_result, Exception) else get_mock_military_bases()
+        flights_near = flights_result if not isinstance(flights_result, Exception) else get_mock_flights(20, 0, 500)
+        heatmap_data = heatmap_result if not isinstance(heatmap_result, Exception) else get_mock_heatmap()
         
         # Get stats
         stats = {
             "total_conflicts": len(formatted_conflicts),
-            "total_flights": len(flights_near) if not isinstance(flights_near, Exception) else 0,
-            "emergency_flights": len([f for f in flights_near if f.get("is_emergency")]) if not isinstance(flights_near, Exception) else 0,
-            "active_signals": len(signals_list) if not isinstance(signals_list, Exception) else 0,
-            "military_bases": len(bases) if not isinstance(bases, Exception) else 0
+            "total_flights": len(flights_near),
+            "emergency_flights": len([f for f in flights_near if f.get("is_emergency", False)]),
+            "active_signals": len(signals_list),
+            "military_bases": len(bases)
         }
         
         return {
             "timestamp": datetime.utcnow().isoformat(),
             "stats": stats,
             "conflicts": formatted_conflicts,
-            "signals": signals_list if not isinstance(signals_list, Exception) else [],
-            "forecasts": forecasts_list if not isinstance(forecasts_list, Exception) else [],
-            "military_bases": bases if not isinstance(bases, Exception) else [],
-            "flights": [flights.format_for_map(f) for f in flights_near[:10]] if not isinstance(flights_near, Exception) else [],
-            "heatmap": heatmap_data if not isinstance(heatmap_data, Exception) else []
+            "signals": signals_list,
+            "forecasts": forecasts_list,
+            "military_bases": bases,
+            "flights": flights_near[:10] if len(flights_near) > 10 else flights_near,
+            "heatmap": heatmap_data
         }
         
     except Exception as e:
-        print(f"Dashboard error: {e}")
+        logger.error(f"Dashboard error: {e}")
         # Return combined mock data
         return {
             "timestamp": datetime.utcnow().isoformat(),
@@ -581,11 +686,11 @@ async def get_dashboard_data(country: Optional[str] = None):
                 "active_signals": 2,
                 "military_bases": 20
             },
-            "conflicts": await get_mock_disasters(),
+            "conflicts": get_mock_conflicts(),
             "signals": get_mock_signals(),
             "forecasts": get_mock_forecasts(),
             "military_bases": get_mock_military_bases(),
-            "flights": [flights.format_for_map(f) for f in flights._get_mock_flights(20, 0, 500)[:10]],
+            "flights": get_mock_flights(20, 0, 500)[:10],
             "heatmap": get_mock_heatmap()
         }
 
@@ -669,14 +774,25 @@ def get_mock_hotspots():
     ]
 
 def get_mock_heatmap():
-    return [
-        {"lat": 18.5 + random.uniform(-3, 3), "lon": -77.2 + random.uniform(-3, 3), "intensity": random.uniform(0.5, 1.0), "type": "earthquake"},
-        {"lat": 25.3 + random.uniform(-4, 4), "lon": -86.5 + random.uniform(-4, 4), "intensity": random.uniform(0.4, 0.9), "type": "hurricane"},
-        {"lat": 14.5 + random.uniform(-5, 5), "lon": 108.2 + random.uniform(-5, 5), "intensity": random.uniform(0.3, 0.8), "type": "flood"},
-        {"lat": 33.5 + random.uniform(-2, 2), "lon": 36.3 + random.uniform(-2, 2), "intensity": random.uniform(0.7, 1.0), "type": "conflict"},
-        {"lat": 31.5 + random.uniform(-1.5, 1.5), "lon": 34.5 + random.uniform(-1.5, 1.5), "intensity": random.uniform(0.6, 0.95), "type": "conflict"},
-        {"lat": 48.5 + random.uniform(-3, 3), "lon": 37.5 + random.uniform(-3, 3), "intensity": random.uniform(0.5, 0.9), "type": "conflict"},
-    ] * 10
+    points = []
+    base_points = [
+        (18.5, -77.2, "earthquake"),
+        (25.3, -86.5, "hurricane"),
+        (14.5, 108.2, "flood"),
+        (33.5, 36.3, "conflict"),
+        (31.5, 34.5, "conflict"),
+        (48.5, 37.5, "conflict"),
+    ]
+    
+    for lat, lon, type_name in base_points:
+        for _ in range(10):
+            points.append({
+                "lat": lat + random.uniform(-3, 3),
+                "lon": lon + random.uniform(-3, 3),
+                "intensity": random.uniform(0.5, 1.0),
+                "type": type_name
+            })
+    return points
 
 def get_mock_grid():
     points = []
@@ -702,6 +818,16 @@ def get_mock_timeline(hours=24):
                 "type": random.choice(["conflict", "earthquake", "flood"])
             })
     return data
+
+def get_mock_heatmap_stats():
+    return {
+        "total_points": 500,
+        "by_type": {"conflict": 300, "earthquake": 100, "flood": 100},
+        "avg_intensity": 0.75,
+        "max_intensity": 0.95,
+        "min_intensity": 0.3,
+        "active_zones": 12
+    }
 
 def get_mock_displacement():
     return [
@@ -791,20 +917,102 @@ def get_mock_military_bases():
 
 def get_mock_bases_near(lat, lon):
     return [
-        {"name": "Nearby Base 1", "distance_km": 45, "country": "Unknown"},
-        {"name": "Nearby Base 2", "distance_km": 120, "country": "Unknown"}
+        {"name": "Nearby Base 1", "distance_km": 45, "country": "Unknown", "lat": lat + 0.5, "lon": lon + 0.5},
+        {"name": "Nearby Base 2", "distance_km": 120, "country": "Unknown", "lat": lat - 0.8, "lon": lon + 1.2}
     ]
 
 def get_mock_helplines(country):
     return [
-        {"name": "🚨 Emergency Services", "number": "112", "available": "24/7", "type": "emergency"},
-        {"name": "❤️ Red Cross", "number": "+123456789", "available": "24/7", "type": "humanitarian"}
+        {"name": "🚨 Emergency Services", "number": "112", "available": "24/7", "type": "emergency", "country": country},
+        {"name": "❤️ Red Cross", "number": "+123456789", "available": "24/7", "type": "humanitarian", "country": country}
+    ]
+
+def get_mock_flights(lat, lon, radius):
+    flights_list = []
+    for i in range(15):
+        is_emergency = random.random() > 0.8
+        flights_list.append({
+            "id": f"flight-{i}",
+            "callsign": f"CALL{i:03d}",
+            "lat": lat + random.uniform(-radius/100, radius/100),
+            "lon": lon + random.uniform(-radius/100, radius/100),
+            "altitude": random.randint(3000, 40000),
+            "speed": random.randint(200, 500),
+            "heading": random.randint(0, 359),
+            "is_emergency": is_emergency,
+            "squawk": "7700" if is_emergency else random.choice(["1200", "2000", "3000"]),
+            "aircraft_type": random.choice(["B738", "A320", "C172", "B77W", "E190"])
+        })
+    return flights_list
+
+def get_mock_disasters():
+    return [
+        {
+            "id": "EQ12345",
+            "name": "Earthquake - Caribbean Sea",
+            "type": "Earthquake",
+            "lat": 18.5,
+            "lon": -77.2,
+            "alertLevel": "RED",
+            "startTime": datetime.utcnow().isoformat(),
+            "description": "Magnitude 6.7 earthquake near Jamaica"
+        },
+        {
+            "id": "TC67890",
+            "name": "Tropical Storm - Gulf of Mexico",
+            "type": "Cyclone",
+            "lat": 25.3,
+            "lon": -86.5,
+            "alertLevel": "ORANGE",
+            "startTime": datetime.utcnow().isoformat(),
+            "description": "Category 1 hurricane approaching coast"
+        },
+        {
+            "id": "FL54321",
+            "name": "Flooding - Southeast Asia",
+            "type": "Flood",
+            "lat": 14.5,
+            "lon": 108.2,
+            "alertLevel": "GREEN",
+            "startTime": datetime.utcnow().isoformat(),
+            "description": "Monsoon flooding in Vietnam"
+        }
+    ]
+
+def get_mock_news():
+    return [
+        {
+            "title": "7.2 Earthquake Hits Caribbean",
+            "source": "ReliefWeb",
+            "timestamp": datetime.utcnow().isoformat(),
+            "url": "#",
+            "summary": "Major earthquake triggers tsunami warnings"
+        },
+        {
+            "title": "Humanitarian Aid Reaches Flood Victims",
+            "source": "UN OCHA",
+            "timestamp": datetime.utcnow().isoformat(),
+            "url": "#",
+            "summary": "Emergency supplies distributed in affected regions"
+        },
+        {
+            "title": "Conflict Escalates: Civilians Urged to Evacuate",
+            "source": "ICRC",
+            "timestamp": datetime.utcnow().isoformat(),
+            "url": "#",
+            "summary": "Humanitarian corridor established"
+        }
     ]
 
 if __name__ == "__main__":
     print("="*60)
     print("🚀 ssec-Sentinel v0.3.0 Starting...")
     print("="*60)
+    print("\n📡 Available collectors:")
+    for name, available in available_collectors.items():
+        status = "✅" if available else "❌"
+        print(f"  {status} {name}")
+    
     print("\n📡 Endpoints available:")
     print("  • GET  /")
     print("  • GET  /health")
@@ -831,7 +1039,7 @@ if __name__ == "__main__":
     print("🎯 Press Ctrl+C to stop\n")
     
     uvicorn.run(
-        "ssec_app:app",
+        "__main__:app",
         host="0.0.0.0",
         port=8000,
         reload=True,
