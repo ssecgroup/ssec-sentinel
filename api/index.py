@@ -1,32 +1,20 @@
 ﻿from fastapi import FastAPI
 from mangum import Mangum
-import sys
-from pathlib import Path
+import httpx
 
-# Add backend to path
-sys.path.append(str(Path(__file__).parent.parent / 'backend'))
+app = FastAPI()
 
-# Import your main app
-from backend.ssec_app import app as fastapi_app
-
-# Create a new app for Vercel/Render
-app = FastAPI(title="ssec-Sentinel API", version="0.3.0")
-
-# Include your main app's routes
-app.mount("/api", fastapi_app)
-
-# Add health check at root
-@app.get("/")
-async def root():
-    return {
-        "message": "ssec-Sentinel API",
-        "version": "0.3.0",
-        "status": "operational"
-    }
-
-@app.get("/health")
+@app.get("/api/health")
 async def health():
-    return {"status": "healthy"}
+    return {"status": "healthy", "service": "ssec-sentinel-frontend"}
 
-# Handler for serverless
+@app.api_route("/api/{path:path}", methods=["GET", "POST", "PUT", "DELETE"])
+async def proxy(path: str):
+    async with httpx.AsyncClient() as client:
+        try:
+            response = await client.get(f"https://ssec-sentinel.onrender.com/{path}")
+            return response.json()
+        except:
+            return {"error": "Backend unavailable"}
+
 handler = Mangum(app)
