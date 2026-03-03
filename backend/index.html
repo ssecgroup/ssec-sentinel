@@ -1,0 +1,1188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ssec-Sentinel • Emergency Intelligence Network</title>
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Reset & Variables */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #ff4444;
+            --primary-dark: #cc0000;
+            --primary-light: #ff6666;
+            --secondary: #4CAF50;
+            --secondary-dark: #45a049;
+            --accent: #8844ff;
+            --bg-dark: #0a0f1e;
+            --bg-card: #1a1f2f;
+            --bg-hover: #2a2f3f;
+            --text: #ffffff;
+            --text-muted: #a0a5b5;
+            --border: #2a2f3f;
+            --shadow: 0 8px 30px rgba(0,0,0,0.3);
+            --shadow-hover: 0 12px 40px rgba(255,68,68,0.2);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text);
+            line-height: 1.6;
+            overflow: hidden;
+        }
+
+        /* Header */
+        .header {
+            background: var(--bg-card);
+            padding: 0.75rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid var(--primary);
+            box-shadow: var(--shadow);
+            position: relative;
+            z-index: 1000;
+            height: 70px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .logo-icon {
+            font-size: 2rem;
+            color: var(--primary);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+
+        .logo h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #fff 0%, #ff4444 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.5px;
+        }
+
+        .logo span {
+            background: var(--primary);
+            color: white;
+            font-size: 0.7rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: 20px;
+            font-weight: 600;
+            margin-left: 0.5rem;
+        }
+
+        .stats {
+            display: flex;
+            gap: 2rem;
+            background: rgba(255,68,68,0.1);
+            padding: 0.5rem 1.5rem;
+            border-radius: 40px;
+            border: 1px solid var(--primary);
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .stat-item i {
+            color: var(--primary);
+            font-size: 1rem;
+        }
+
+        .stat-value {
+            color: var(--primary);
+            font-weight: 700;
+            font-size: 1.2rem;
+            margin-right: 0.2rem;
+        }
+
+        .refresh-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.6rem 1.2rem;
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s;
+            border: 1px solid transparent;
+        }
+
+        .refresh-btn:hover {
+            background: transparent;
+            border-color: var(--primary);
+            transform: scale(1.05);
+        }
+
+        .refresh-btn i {
+            font-size: 0.9rem;
+        }
+
+        /* Main Container */
+        .main-container {
+            display: grid;
+            grid-template-columns: 350px 1fr 350px;
+            gap: 1rem;
+            padding: 1rem;
+            height: calc(100vh - 94px);
+            overflow: hidden;
+        }
+
+        /* Sidebars */
+        .sidebar {
+            background: var(--bg-card);
+            border-radius: 20px;
+            padding: 1.2rem;
+            overflow-y: auto;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            scrollbar-width: thin;
+            scrollbar-color: var(--primary) var(--bg-card);
+        }
+
+        .sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .sidebar::-webkit-scrollbar-track {
+            background: var(--bg-card);
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 10px;
+        }
+
+        /* Map Container */
+        .map-container {
+            background: var(--bg-card);
+            border-radius: 20px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            position: relative;
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        /* Map Controls */
+        .map-controls {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .map-btn {
+            background: var(--bg-card);
+            color: white;
+            border: 1px solid var(--primary);
+            padding: 0.8rem 1.2rem;
+            border-radius: 40px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s;
+            backdrop-filter: blur(5px);
+        }
+
+        .map-btn:hover {
+            background: var(--primary);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .map-btn.active {
+            background: var(--primary);
+        }
+
+        /* Cards */
+        .card {
+            background: rgba(255,255,255,0.03);
+            border-radius: 16px;
+            padding: 1.2rem;
+            margin-bottom: 1.2rem;
+            border: 1px solid var(--border);
+            transition: all 0.3s;
+        }
+
+        .card:hover {
+            border-color: var(--primary);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1.2rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .card-header i {
+            font-size: 1.2rem;
+        }
+
+        /* Radio Player */
+        .radio-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .radio-select {
+            width: 100%;
+            padding: 0.8rem 1rem;
+            background: var(--bg-dark);
+            color: white;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .radio-select:hover {
+            border-color: var(--primary);
+        }
+
+        .radio-select option {
+            background: var(--bg-card);
+        }
+
+        .radio-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .radio-btn {
+            flex: 1;
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.8rem;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            transition: all 0.3s;
+        }
+
+        .radio-btn.secondary {
+            background: var(--bg-dark);
+            border: 1px solid var(--border);
+        }
+
+        .radio-btn.secondary:hover {
+            border-color: var(--primary);
+        }
+
+        .radio-btn.off {
+            background: var(--secondary);
+        }
+
+        .radio-btn i {
+            font-size: 1rem;
+        }
+
+        #radio-player {
+            width: 100%;
+            margin-top: 1rem;
+            border-radius: 12px;
+            background: var(--bg-dark);
+            border: 1px solid var(--border);
+        }
+
+        .radio-status {
+            margin-top: 0.5rem;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .radio-status i {
+            color: var(--secondary);
+        }
+
+        /* News Section */
+        .news-item {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border);
+            cursor: pointer;
+            transition: all 0.3s;
+            border-radius: 8px;
+        }
+
+        .news-item:hover {
+            background: var(--bg-hover);
+            padding-left: 1.5rem;
+        }
+
+        .news-item:last-child {
+            border-bottom: none;
+        }
+
+        .news-title {
+            font-weight: 600;
+            margin-bottom: 0.3rem;
+            color: white;
+        }
+
+        .news-meta {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .news-meta i {
+            color: var(--primary);
+            font-size: 0.7rem;
+        }
+
+        .news-badge {
+            background: var(--primary);
+            color: white;
+            padding: 0.2rem 0.6rem;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        /* Helplines */
+        .country-select {
+            width: 100%;
+            padding: 0.8rem 1rem;
+            background: var(--bg-dark);
+            color: white;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            margin-bottom: 1rem;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .helpline-item {
+            background: var(--bg-dark);
+            padding: 1rem;
+            border-radius: 12px;
+            margin-bottom: 0.8rem;
+            border-left: 3px solid var(--primary);
+            transition: all 0.3s;
+        }
+
+        .helpline-item:hover {
+            transform: translateX(5px);
+            border-left-color: var(--secondary);
+        }
+
+        .helpline-name {
+            font-weight: 600;
+            color: var(--primary-light);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.3rem;
+        }
+
+        .helpline-number {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: white;
+            margin-bottom: 0.2rem;
+        }
+
+        .helpline-number i {
+            color: var(--secondary);
+            margin-right: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .helpline-available {
+            font-size: 0.8rem;
+            color: var(--secondary);
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        /* ETH Donation Card */
+        .eth-card {
+            background: linear-gradient(135deg, #2a1f3a 0%, #1a2f3a 100%);
+            border: 1px solid var(--accent);
+        }
+
+        .eth-address-container {
+            background: rgba(0,0,0,0.3);
+            padding: 1rem;
+            border-radius: 12px;
+            border: 1px solid var(--accent);
+            margin: 1rem 0;
+        }
+
+        .eth-address {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.85rem;
+            background: var(--bg-dark);
+            padding: 0.8rem 1rem;
+            border-radius: 8px;
+            color: var(--accent);
+        }
+
+        .copy-btn {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            transition: all 0.3s;
+        }
+
+        .copy-btn:hover {
+            background: #aa66ff;
+            transform: scale(1.05);
+        }
+
+        .copy-btn.copied {
+            background: var(--secondary);
+        }
+
+        .donate-progress {
+            margin-top: 1rem;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: var(--bg-dark);
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 0.5rem 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent), var(--primary));
+            border-radius: 10px;
+            width: 15%;
+            transition: width 0.3s;
+        }
+
+        /* Flights List */
+        .flight-item {
+            background: var(--bg-dark);
+            padding: 0.8rem;
+            border-radius: 10px;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-left: 3px solid var(--secondary);
+        }
+
+        .flight-item.emergency {
+            border-left-color: var(--primary);
+            background: rgba(255,68,68,0.1);
+        }
+
+        .flight-callsign {
+            font-weight: 600;
+        }
+
+        .flight-emergency {
+            color: var(--primary);
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        /* Footer */
+        .footer {
+            background: var(--bg-card);
+            padding: 0.6rem 2rem;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .footer a {
+            color: var(--primary);
+            text-decoration: none;
+            margin: 0 0.5rem;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        .eth-footer {
+            color: var(--accent);
+            font-family: monospace;
+        }
+
+        /* Loading States */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,68,68,0.3);
+            border-radius: 50%;
+            border-top-color: var(--primary);
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .skeleton {
+            background: linear-gradient(90deg, var(--bg-dark) 25%, var(--bg-hover) 50%, var(--bg-dark) 75%);
+            background-size: 200% 100%;
+            animation: skeleton 1.5s infinite;
+            border-radius: 8px;
+            height: 60px;
+            margin-bottom: 0.5rem;
+        }
+
+        @keyframes skeleton {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        /* Toast Notification */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--bg-card);
+            border-left: 4px solid var(--secondary);
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            transform: translateX(400px);
+            transition: transform 0.3s;
+            z-index: 2000;
+        }
+
+        .toast.show {
+            transform: translateX(0);
+        }
+
+        .toast i {
+            color: var(--secondary);
+            font-size: 1.2rem;
+        }
+
+        .toast-message {
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="logo">
+            <i class="fas fa-broadcast-tower logo-icon"></i>
+            <h1>ssec·Sentinel</h1>
+            <span>BETA</span>
+        </div>
+        
+        <div class="stats">
+            <div class="stat-item">
+                <i class="fas fa-exclamation-triangle"></i>
+                <span><span class="stat-value" id="disaster-count">0</span> active</span>
+            </div>
+            <div class="stat-item">
+                <i class="fas fa-plane"></i>
+                <span><span class="stat-value" id="flight-count">0</span> aircraft</span>
+            </div>
+            <div class="stat-item">
+                <i class="fas fa-clock"></i>
+                <span id="last-update">updated now</span>
+            </div>
+        </div>
+        
+        <button class="refresh-btn" onclick="refreshAll()">
+            <i class="fas fa-sync-alt"></i>
+            Refresh Data
+        </button>
+    </header>
+
+    <div class="main-container">
+        <!-- LEFT SIDEBAR - Radio & Helplines -->
+        <div class="sidebar">
+            <!-- Radio Card -->
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-radio"></i>
+                    <span>Emergency Radio</span>
+                </div>
+                
+                <div class="radio-controls">
+                    <select id="radioStation" class="radio-select">
+                        <option value="https://icecast.wrpi.org:8443/wrpi.mp3">🇺🇸 NOAA Weather Radio (US Emergency)</option>
+                        <option value="https://stream.live.vc.bbcmedia.co.uk/bbc_world_service">🇬🇧 BBC World Service (Global News)</option>
+                        <option value="https://radio.un.org/_aod/cj/2021/04/08/e70bb7cb6d/_play.m3u">🇺🇳 UN Radio (Humanitarian)</option>
+                        <option value="https://nhkworld.webcdn.stream.ne.jp/hls/live/2003459/nhkworld-r1/en/index.m3u8">🇯🇵 NHK World Radio (Japan)</option>
+                        <option value="https://stream.zeno.fm/m3uev3y5h0quv">🌍 Global Emergency Feed</option>
+                    </select>
+                    
+                    <div class="radio-buttons">
+                        <button id="playBtn" class="radio-btn" onclick="playRadio()">
+                            <i class="fas fa-play"></i>
+                            PLAY
+                        </button>
+                        <button id="stopBtn" class="radio-btn secondary" onclick="stopRadio()">
+                            <i class="fas fa-stop"></i>
+                            STOP
+                        </button>
+                    </div>
+                    
+                    <audio id="radioPlayer" controls style="width: 100%; display: none;">
+                        <source src="" type="audio/mpeg">
+                    </audio>
+                    
+                    <div class="radio-status" id="radioStatus">
+                        <i class="fas fa-info-circle"></i>
+                        <span>Select a station and click PLAY</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Helplines Card -->
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-phone-alt"></i>
+                    <span>Crisis Helplines</span>
+                </div>
+                
+                <select id="countrySelect" class="country-select" onchange="loadHelplines()">
+                    <option value="US">🇺🇸 United States</option>
+                    <option value="HT">🇭🇹 Haiti</option>
+                    <option value="CU">🇨🇺 Cuba</option>
+                    <option value="JM">🇯🇲 Jamaica</option>
+                    <option value="UA">🇺🇦 Ukraine</option>
+                    <option value="SY">🇸🇾 Syria</option>
+                    <option value="TR">🇹🇷 Turkey</option>
+                    <option value="JP">🇯🇵 Japan</option>
+                    <option value="IN">🇮🇳 India</option>
+                </select>
+                
+                <div id="helplinesContainer">
+                    <div class="skeleton"></div>
+                    <div class="skeleton"></div>
+                </div>
+            </div>
+            
+            <!-- ETH Donation Card -->
+            <div class="card eth-card">
+                <div class="card-header">
+                    <i class="fas fa-heart" style="color: var(--accent);"></i>
+                    <span>Support the Network</span>
+                </div>
+                
+                <p style="color: var(--text-muted); margin-bottom: 1rem; font-size: 0.9rem;">
+                    Your donations fund decentralized disaster nodes in remote areas.
+                </p>
+                
+                <div class="eth-address-container">
+                    <div class="eth-address">
+                        <code id="ethAddress">0x8242f0f25c5445F7822e80d3C9615e57586c6639</code>
+                        <button id="copyBtn" class="copy-btn" onclick="copyEthAddress()">
+                            <i class="fas fa-copy"></i>
+                            <span>COPY</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="donate-progress">
+                    <div style="display: flex; justify-content: space-between; font-size: 0.8rem;">
+                        <span>🌍 15% to next node</span>
+                        <span>3 of 20 nodes funded</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 15%;"></div>
+                    </div>
+                </div>
+                
+                <p style="margin-top: 1rem; font-size: 0.8rem; text-align: center;">
+                    <i class="fas fa-shield-alt" style="color: var(--accent);"></i>
+                    Next: Raspberry Pi node in Haiti
+                </p>
+            </div>
+        </div>
+
+        <!-- MAIN MAP -->
+        <div class="map-container">
+            <div id="map"></div>
+            
+            <!-- Map Controls -->
+            <div class="map-controls">
+                <button class="map-btn" onclick="toggleHeatmap()" id="heatmapBtn">
+                    <i class="fas fa-fire"></i>
+                    <span>Heatmap</span>
+                </button>
+                <button class="map-btn" onclick="centerMap()">
+                    <i class="fas fa-globe"></i>
+                    <span>Reset View</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- RIGHT SIDEBAR - News & Flights -->
+        <div class="sidebar">
+            <!-- News Card -->
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-newspaper"></i>
+                    <span>Emergency News</span>
+                </div>
+                
+                <div id="newsContainer" class="news-container">
+                    <div class="skeleton"></div>
+                    <div class="skeleton"></div>
+                    <div class="skeleton"></div>
+                </div>
+            </div>
+            
+            <!-- Flights Card -->
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-plane"></i>
+                    <span>Nearby Aircraft</span>
+                </div>
+                
+                <div id="flightsContainer">
+                    <div style="text-align: center; color: var(--text-muted); padding: 2rem;">
+                        <i class="fas fa-map-marker-alt" style="font-size: 2rem; margin-bottom: 1rem;"></i>
+                        <p>Click on a disaster marker to see nearby flights</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div>
+            <span>ssec·Sentinel v0.1.0</span>
+            <span style="margin: 0 1rem;">|</span>
+            <a href="#"><i class="fab fa-github"></i> GitHub</a>
+            <a href="#"><i class="fas fa-file-alt"></i> Docs</a>
+            <a href="#"><i class="fas fa-balance-scale"></i> Legal</a>
+        </div>
+        <div class="eth-footer">
+            <i class="fab fa-ethereum"></i> 0x8242...6639
+        </div>
+    </footer>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast">
+        <i class="fas fa-check-circle"></i>
+        <span class="toast-message" id="toastMessage">Address copied!</span>
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- Leaflet Heatmap -->
+    <script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script>
+    
+    <script>
+        // ==================== INITIALIZATION ====================
+        const API_BASE = 'http://127.0.0.1:8000';
+        let map = L.map('map').setView([20, 0], 2);
+        let heatmapLayer = null;
+        let disasterMarkers = [];
+        let flightMarkers = [];
+        let currentDisasterId = null;
+        let heatmapActive = false;
+        
+        // Add OpenStreetMap tiles
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap, SSEC Humanitarian',
+            maxZoom: 18
+        }).addTo(map);
+        
+        // Custom marker icons
+        const markerIcon = (color) => L.divIcon({
+            className: 'custom-marker',
+            html: `<div style="background:${color}; width:20px; height:20px; border-radius:50%; border:3px solid white; box-shadow:0 0 10px rgba(0,0,0,0.5);"></div>`
+        });
+        
+        // ==================== RADIO CONTROL ====================
+        const radioPlayer = document.getElementById('radioPlayer');
+        const playBtn = document.getElementById('playBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const radioStation = document.getElementById('radioStation');
+        const radioStatus = document.getElementById('radioStatus');
+        
+        function playRadio() {
+            const station = radioStation.value;
+            
+            // Update status
+            radioStatus.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Connecting to station...`;
+            
+            // Set source and play
+            radioPlayer.src = station;
+            radioPlayer.style.display = 'block';
+            
+            radioPlayer.play()
+                .then(() => {
+                    radioStatus.innerHTML = `<i class="fas fa-check-circle" style="color: var(--secondary);"></i> Playing: ${radioStation.selectedOptions[0].text}`;
+                    playBtn.style.background = 'var(--secondary)';
+                    showToast('📻 Radio connected');
+                })
+                .catch(err => {
+                    console.error('Radio error:', err);
+                    radioStatus.innerHTML = `<i class="fas fa-exclamation-triangle" style="color: var(--primary);"></i> Cannot play stream. Try another station.`;
+                    radioPlayer.style.display = 'none';
+                    playBtn.style.background = 'var(--primary)';
+                    showToast('❌ Radio connection failed', 'error');
+                });
+        }
+        
+        function stopRadio() {
+            radioPlayer.pause();
+            radioPlayer.style.display = 'none';
+            playBtn.style.background = 'var(--primary)';
+            radioStatus.innerHTML = `<i class="fas fa-info-circle"></i> Select a station and click PLAY`;
+        }
+        
+        // ==================== ETH ADDRESS COPY ====================
+        async function copyEthAddress() {
+            const ethAddress = document.getElementById('ethAddress').innerText;
+            try {
+                await navigator.clipboard.writeText(ethAddress);
+                const copyBtn = document.getElementById('copyBtn');
+                copyBtn.innerHTML = '<i class="fas fa-check"></i><span>COPIED!</span>';
+                copyBtn.classList.add('copied');
+                showToast('✅ ETH address copied to clipboard');
+                
+                setTimeout(() => {
+                    copyBtn.innerHTML = '<i class="fas fa-copy"></i><span>COPY</span>';
+                    copyBtn.classList.remove('copied');
+                }, 3000);
+            } catch (err) {
+                showToast('❌ Failed to copy', 'error');
+            }
+        }
+        
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+            toastMessage.textContent = message;
+            
+            if (type === 'error') {
+                toast.style.borderLeftColor = 'var(--primary)';
+            } else {
+                toast.style.borderLeftColor = 'var(--secondary)';
+            }
+            
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+        
+        // ==================== LOAD DISASTERS ====================
+        async function loadDisasters() {
+            try {
+                const response = await fetch(`${API_BASE}/ssec/api/disasters`);
+                const disasters = await response.json();
+                
+                document.getElementById('disaster-count').innerText = disasters.length;
+                
+                // Clear existing markers
+                disasterMarkers.forEach(m => map.removeLayer(m));
+                disasterMarkers = [];
+                
+                // Add new markers
+                disasters.forEach(d => {
+                    const color = d.alertLevel === 'RED' ? '#ff4444' : 
+                                 d.alertLevel === 'ORANGE' ? '#ff8844' : '#4CAF50';
+                    
+                    const marker = L.marker([d.lat, d.lon], { 
+                        icon: markerIcon(color),
+                        riseOnHover: true
+                    }).bindPopup(`
+                        <div style="min-width:250px;">
+                            <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.5rem;">
+                                <span style="background:${color}; width:12px; height:12px; border-radius:50%;"></span>
+                                <span style="font-weight:700; color:${color};">${d.alertLevel} ALERT</span>
+                            </div>
+                            <h3 style="margin:0 0 0.5rem 0;">${d.name}</h3>
+                            <p style="margin:0 0 0.3rem 0;"><strong>Type:</strong> ${d.type}</p>
+                            <p style="margin:0 0 0.3rem 0;">${d.description}</p>
+                            <p style="margin:0 0 1rem 0; font-size:0.8rem; color:#999;">
+                                ${new Date(d.startTime).toLocaleString()}
+                            </p>
+                            <button onclick="showFlights(${d.lat}, ${d.lon}, '${d.id}')" 
+                                    style="background:${color}; color:white; border:none; padding:0.5rem 1rem; border-radius:5px; cursor:pointer; width:100%; font-weight:600;">
+                                <i class="fas fa-plane"></i> Show Nearby Flights
+                            </button>
+                        </div>
+                    `).addTo(map);
+                    
+                    disasterMarkers.push(marker);
+                });
+                
+                console.log(`Loaded ${disasters.length} disasters`);
+            } catch (error) {
+                console.error('Error loading disasters:', error);
+                document.getElementById('disaster-count').innerText = '!';
+            }
+        }
+        
+        // ==================== LOAD NEWS ====================
+        async function loadNews() {
+            try {
+                const response = await fetch(`${API_BASE}/ssec/api/news`);
+                const news = await response.json();
+                
+                const container = document.getElementById('newsContainer');
+                container.innerHTML = news.map(item => `
+                    <div class="news-item" onclick="window.open('${item.url}', '_blank')">
+                        <div class="news-title">${item.title}</div>
+                        <div class="news-meta">
+                            <span><i class="fas fa-circle"></i> ${item.source}</span>
+                            <span>${new Date(item.timestamp).toLocaleTimeString()}</span>
+                            <span class="news-badge">NEW</span>
+                        </div>
+                    </div>
+                `).join('');
+                
+            } catch (error) {
+                console.error('Error loading news:', error);
+            }
+        }
+        
+        // ==================== LOAD HELPLINES ====================
+        async function loadHelplines() {
+            const country = document.getElementById('countrySelect').value;
+            
+            try {
+                const response = await fetch(`${API_BASE}/ssec/api/helplines?country=${country}`);
+                const helplines = await response.json();
+                
+                const container = document.getElementById('helplinesContainer');
+                container.innerHTML = helplines.map(h => `
+                    <div class="helpline-item">
+                        <div class="helpline-name">
+                            <i class="fas fa-heart"></i>
+                            ${h.name}
+                        </div>
+                        <div class="helpline-number">
+                            <i class="fas fa-phone"></i>
+                            ${h.number}
+                        </div>
+                        <div class="helpline-available">
+                            <i class="fas fa-clock"></i>
+                            ${h.available}
+                        </div>
+                    </div>
+                `).join('');
+                
+            } catch (error) {
+                console.error('Error loading helplines:', error);
+            }
+        }
+        
+        // ==================== SHOW FLIGHTS ====================
+        async function showFlights(lat, lon, disasterId) {
+            currentDisasterId = disasterId;
+            
+            // Clear existing flight markers
+            flightMarkers.forEach(m => map.removeLayer(m));
+            flightMarkers = [];
+            
+            try {
+                const response = await fetch(`${API_BASE}/ssec/api/flights/near-disaster/${disasterId}`);
+                const data = await response.json();
+                
+                document.getElementById('flight-count').innerText = data.aircraft_count;
+                
+                // Update flights container
+                const flightsContainer = document.getElementById('flightsContainer');
+                flightsContainer.innerHTML = data.aircraft.map(plane => {
+                    const isEmergency = plane.squawk === '7700';
+                    return `
+                        <div class="flight-item ${isEmergency ? 'emergency' : ''}">
+                            <div>
+                                <div class="flight-callsign">
+                                    <i class="fas fa-plane"></i>
+                                    ${plane.callsign || 'Unknown'}
+                                </div>
+                                <div style="font-size:0.8rem; color:var(--text-muted);">
+                                    ${plane.altitude}ft • ${plane.speed}kts
+                                </div>
+                            </div>
+                            ${isEmergency ? '<div class="flight-emergency">🚨 EMERGENCY</div>' : ''}
+                        </div>
+                    `;
+                }).join('');
+                
+                // Add markers to map
+                data.aircraft.forEach(plane => {
+                    if (plane.lat && plane.lon) {
+                        const isEmergency = plane.squawk === '7700';
+                        const marker = L.circleMarker([plane.lat, plane.lon], {
+                            color: isEmergency ? '#ff4444' : '#4CAF50',
+                            radius: isEmergency ? 6 : 4,
+                            fillOpacity: 0.8
+                        }).bindPopup(`
+                            <b>${plane.callsign || 'Unknown'}</b><br>
+                            Altitude: ${plane.altitude}ft<br>
+                            Speed: ${plane.speed}kts<br>
+                            ${isEmergency ? '<span style="color:#ff4444;">🚨 EMERGENCY SQUAWK 7700</span>' : ''}
+                        `).addTo(map);
+                        
+                        flightMarkers.push(marker);
+                    }
+                });
+                
+                // Zoom to show area
+                map.setView([lat, lon], 7);
+                
+            } catch (error) {
+                console.error('Error loading flights:', error);
+            }
+        }
+        
+        // ==================== HEATMAP TOGGLE ====================
+        async function toggleHeatmap() {
+            const btn = document.getElementById('heatmapBtn');
+            
+            if (heatmapLayer) {
+                map.removeLayer(heatmapLayer);
+                heatmapLayer = null;
+                heatmapActive = false;
+                btn.classList.remove('active');
+                btn.innerHTML = '<i class="fas fa-fire"></i><span>Heatmap</span>';
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/ssec/api/heatmap`);
+                const heatData = await response.json();
+                
+                const points = heatData.map(p => [p.lat, p.lon, p.intensity]);
+                
+                heatmapLayer = L.heatLayer(points, {
+                    radius: 25,
+                    blur: 15,
+                    maxZoom: 10,
+                    gradient: {0.4: 'blue', 0.6: 'lime', 0.8: 'red'}
+                }).addTo(map);
+                
+                heatmapActive = true;
+                btn.classList.add('active');
+                btn.innerHTML = '<i class="fas fa-fire"></i><span>Hide Heatmap</span>';
+                
+            } catch (error) {
+                console.error('Error loading heatmap:', error);
+            }
+        }
+        
+        // ==================== CENTER MAP ====================
+        function centerMap() {
+            map.setView([20, 0], 2);
+        }
+        
+        // ==================== REFRESH ALL ====================
+        async function refreshAll() {
+            const refreshBtn = document.querySelector('.refresh-btn');
+            refreshBtn.innerHTML = '<i class="fas fa-sync-alt fa-spin"></i> Updating...';
+            
+            await Promise.all([
+                loadDisasters(),
+                loadNews(),
+                loadHelplines()
+            ]);
+            
+            document.getElementById('last-update').innerHTML = '<i class="fas fa-clock"></i> updated now';
+            
+            refreshBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Refresh Data';
+            showToast('✅ All data refreshed');
+        }
+        
+        // ==================== AUTO REFRESH ====================
+        setInterval(() => {
+            loadDisasters();
+            loadNews();
+            document.getElementById('last-update').innerHTML = '<i class="fas fa-clock"></i> just updated';
+        }, 60000);
+        
+        // ==================== INITIAL LOAD ====================
+        document.addEventListener('DOMContentLoaded', () => {
+            loadDisasters();
+            loadNews();
+            loadHelplines();
+        });
+    </script>
+</body>
+</html>
