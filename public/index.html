@@ -1,9 +1,9 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ssec-Sentinel • Emergency Intelligence Network</title>
+    <title>ssec-Sentinel � Emergency Intelligence Network</title>
     
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -684,7 +684,7 @@
     <header class="header">
         <div class="logo">
             <i class="fas fa-broadcast-tower logo-icon"></i>
-            <h1>ssec·Sentinel</h1>
+            <h1>ssec�Sentinel</h1>
             <span>v0.3</span>
         </div>
         
@@ -770,7 +770,7 @@
             
             <!-- Map Attribution -->
             <div style="position: absolute; bottom: 10px; left: 10px; z-index: 1000; background: rgba(0,0,0,0.5); padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; color: var(--text-muted);">
-                Data: ACLED • HDX • OpenSky • VIEWS
+                Data: ACLED � HDX � OpenSky � VIEWS
             </div>
         </div>
 
@@ -784,13 +784,13 @@
                 </div>
                 <div class="radio-controls">
                     <select id="radioStation" class="radio-select">
-                        <option value="https://stream.live.vc.bbcmedia.co.uk/bbc_world_service">🌍 BBC World Service (Global)</option>
-                        <option value="https://icecast.radiofrance.fr/fip-midfi.mp3">🇫🇷 France Inter (France)</option>
-                        <option value="https://nhkworld.webcdn.stream.ne.jp/hls/live/2003459/nhkworld-r1/en/index.m3u8">🇯🇵 NHK World (Japan)</option>
-                        <option value="https://kcrw.streamguys1.com/kcrw_128k_mp3_aac">🇺🇸 KCRW (USA)</option>
-                        <option value="https://cbcradiolive.akamaized.net/hls/live/2040959/ES_R1ETR/master.m3u8">🇨🇦 CBC Radio (Canada)</option>
-                        <option value="https://ice.audionow.com:8000/Kool97FMLive.ogg">🇯🇲 Kool 97 FM (Jamaica)</option>
-                        <option value="https://abcradiolivehls-lh.akamaihd.net/i/news_1@319354/index_128_a-p.m3u8">🇦🇺 ABC News (Australia)</option>
+                        <option value="https://stream.live.vc.bbcmedia.co.uk/bbc_world_service">?? BBC World Service (Global)</option>
+                        <option value="https://icecast.radiofrance.fr/fip-midfi.mp3">???? France Inter (France)</option>
+                        <option value="https://nhkworld.webcdn.stream.ne.jp/hls/live/2003459/nhkworld-r1/en/index.m3u8">???? NHK World (Japan)</option>
+                        <option value="https://kcrw.streamguys1.com/kcrw_128k_mp3_aac">???? KCRW (USA)</option>
+                        <option value="https://cbcradiolive.akamaized.net/hls/live/2040959/ES_R1ETR/master.m3u8">???? CBC Radio (Canada)</option>
+                        <option value="https://ice.audionow.com:8000/Kool97FMLive.ogg">???? Kool 97 FM (Jamaica)</option>
+                        <option value="https://abcradiolivehls-lh.akamaihd.net/i/news_1@319354/index_128_a-p.m3u8">???? ABC News (Australia)</option>
                     </select>
                     <button class="radio-btn" onclick="toggleRadio()" id="radioBtn">
                         <i class="fas fa-play"></i>
@@ -822,16 +822,16 @@
                     <span style="margin-left: auto; font-size: 0.8rem; color: var(--text-muted);">Via SSEC</span>
                 </div>
                 <select id="countrySelect" class="country-select" onchange="loadHelplines()">
-                    <option value="US">🇺🇸 United States</option>
-                    <option value="UA">🇺🇦 Ukraine</option>
-                    <option value="SY">🇸🇾 Syria</option>
-                    <option value="HT">🇭🇹 Haiti</option>
-                    <option value="TR">🇹🇷 Turkey</option>
-                    <option value="AF">🇦🇫 Afghanistan</option>
-                    <option value="IQ">🇮🇶 Iraq</option>
-                    <option value="JO">🇯🇴 Jordan</option>
-                    <option value="LB">🇱🇧 Lebanon</option>
-                    <option value="YE">🇾🇪 Yemen</option>
+                    <option value="US">???? United States</option>
+                    <option value="UA">???? Ukraine</option>
+                    <option value="SY">???? Syria</option>
+                    <option value="HT">???? Haiti</option>
+                    <option value="TR">???? Turkey</option>
+                    <option value="AF">???? Afghanistan</option>
+                    <option value="IQ">???? Iraq</option>
+                    <option value="JO">???? Jordan</option>
+                    <option value="LB">???? Lebanon</option>
+                    <option value="YE">???? Yemen</option>
                 </select>
                 <div id="helplines-container">
                     <div class="skeleton"></div>
@@ -862,7 +862,7 @@
 
     <footer class="footer">
         <div>
-            <span>ssec·Sentinel v0.3.0</span>
+            <span>ssec�Sentinel v0.3.0</span>
             <span style="margin: 0 1rem;">|</span>
             <a href="#"><i class="fab fa-github"></i> GitHub</a>
             <a href="#"><i class="fas fa-file-alt"></i> API</a>
@@ -885,7 +885,7 @@
     
     <script>
         // ==================== CONFIGURATION ====================
-        const API_BASE = 'https://ssec-sentinel-api.onrender.com';  // Empty for relative URLs on Vercel
+        const API_BASE = "https://ssec-sentinel.onrender.com";  // Empty for relative URLs on Vercel
         let map = L.map('map').setView([20, 0], 2);
         
         // Layers
@@ -903,7 +903,7 @@
         
         // ==================== MAP SETUP ====================
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap, SSEC Humanitarian',
+            attribution: '� OpenStreetMap, SSEC Humanitarian',
             maxZoom: 18
         }).addTo(map);
         
@@ -951,7 +951,7 @@
                 const conflicts = await response.json();
                 
                 document.getElementById('conflict-count').innerText = conflicts.length;
-                document.getElementById('conflict-source').innerText = 'ACLED • LIVE';
+                document.getElementById('conflict-source').innerText = 'ACLED � LIVE';
                 
                 // Clear existing conflicts
                 conflictLayer.clearLayers();
@@ -970,7 +970,7 @@
                                     <p><strong>Fatalities:</strong> ${c.fatalities || 0}</p>
                                     <p><strong>Actors:</strong> ${c.actors?.actor1 || 'Unknown'} vs ${c.actors?.actor2 || 'Unknown'}</p>
                                     <p><strong>Description:</strong> ${c.description || 'No description'}</p>
-                                    <p><small>Source: ${c.source || 'ACLED'} • ${new Date(c.timestamp).toLocaleString()}</small></p>
+                                    <p><small>Source: ${c.source || 'ACLED'} � ${new Date(c.timestamp).toLocaleString()}</small></p>
                                 </div>
                             `)
                             .addTo(conflictLayer);
@@ -982,7 +982,7 @@
                 
             } catch (error) {
                 console.error('Error loading conflicts:', error);
-                document.getElementById('conflict-source').innerText = 'ACLED • ERROR';
+                document.getElementById('conflict-source').innerText = 'ACLED � ERROR';
                 showToast('Error loading conflict data', 'error');
             }
         }
@@ -998,7 +998,7 @@
                 const flights = await response.json();
                 
                 document.getElementById('flight-count').innerText = flights.length;
-                document.getElementById('flight-source').innerText = 'OpenSky • LIVE';
+                document.getElementById('flight-source').innerText = 'OpenSky � LIVE';
                 
                 // Clear existing flights
                 flightLayer.clearLayers();
@@ -1016,7 +1016,7 @@
                                     Altitude: ${f.altitude || 0} ft<br>
                                     Speed: ${f.speed || 0} kts<br>
                                     Squawk: ${f.squawk || '1200'}<br>
-                                    ${f.is_emergency ? '<br><span style="color:#ff4444; font-weight:bold;">🚨 EMERGENCY SQUAWK 7700</span>' : ''}
+                                    ${f.is_emergency ? '<br><span style="color:#ff4444; font-weight:bold;">?? EMERGENCY SQUAWK 7700</span>' : ''}
                                     <br><small>Source: ${f.source || 'OpenSky'}</small>
                                 </div>
                             `)
@@ -1030,7 +1030,7 @@
                 
             } catch (error) {
                 console.error('Error loading flights:', error);
-                document.getElementById('flight-source').innerText = 'OpenSky • ERROR';
+                document.getElementById('flight-source').innerText = 'OpenSky � ERROR';
             }
         }
         
@@ -1046,7 +1046,7 @@
             } catch (error) {
                 console.error('Error loading signals:', error);
                 document.getElementById('signals-container').innerHTML = 
-                    '<div class="error-message">⚠️ HDX Signals temporarily unavailable</div>';
+                    '<div class="error-message">?? HDX Signals temporarily unavailable</div>';
             }
         }
         
@@ -1066,7 +1066,7 @@
                             L.marker([base.lat, base.lon], { icon: icons.military })
                                 .bindPopup(`
                                     <div>
-                                        <h3>${base.icon || '🏛️'} ${base.name}</h3>
+                                        <h3>${base.icon || '???'} ${base.name}</h3>
                                         <p><strong>Type:</strong> ${base.type || 'Military Installation'}</p>
                                         <p><strong>Country:</strong> ${base.country || 'Unknown'}</p>
                                         <p><small>Source: ${base.source || 'GlobalThreatMap'}</small></p>
@@ -1131,10 +1131,10 @@
                             <i class="fas fa-plane"></i> ${f.callsign || 'Unknown'}
                         </div>
                         <div style="font-size:0.8rem;">
-                            ${f.altitude || 0}ft • ${f.speed || 0}kts
+                            ${f.altitude || 0}ft � ${f.speed || 0}kts
                         </div>
                     </div>
-                    <span class="flight-emergency">🚨 7700</span>
+                    <span class="flight-emergency">?? 7700</span>
                 </div>
             `).join('');
         }
@@ -1154,7 +1154,7 @@
                     </div>
                     <div style="font-size:0.85rem; margin-bottom:0.5rem;">${s.summary || ''}</div>
                     <div style="font-size:0.75rem; color: var(--text-muted);">
-                        <i class="fas fa-chart-line"></i> ${s.trend || 'Stable'} • HDX
+                        <i class="fas fa-chart-line"></i> ${s.trend || 'Stable'} � HDX
                     </div>
                 </div>
             `).join('');
@@ -1197,23 +1197,23 @@
         // Local helplines database (backup)
         const LOCAL_HELPLINES = {
             US: [
-                { name: '🚨 911 Emergency', number: '911', available: '24/7' },
-                { name: '🧠 988 Suicide & Crisis', number: '988', available: '24/7' },
-                { name: '❤️ Red Cross', number: '1-800-733-2767', available: '24/7' },
-                { name: '🌪️ Disaster Distress', number: '1-800-985-5990', available: '24/7' }
+                { name: '?? 911 Emergency', number: '911', available: '24/7' },
+                { name: '?? 988 Suicide & Crisis', number: '988', available: '24/7' },
+                { name: '?? Red Cross', number: '1-800-733-2767', available: '24/7' },
+                { name: '??? Disaster Distress', number: '1-800-985-5990', available: '24/7' }
             ],
             UA: [
-                { name: '🚨 Emergency', number: '112', available: '24/7' },
-                { name: '❤️ Ukrainian Red Cross', number: '0 800 332 656', available: '24/7' }
+                { name: '?? Emergency', number: '112', available: '24/7' },
+                { name: '?? Ukrainian Red Cross', number: '0 800 332 656', available: '24/7' }
             ],
             SY: [
-                { name: '❤️ Syrian Red Crescent', number: '+963 11 331 0666', available: '24/7' },
-                { name: '🆘 ICRC Syria', number: '+963 11 331 0667', available: '24/7' }
+                { name: '?? Syrian Red Crescent', number: '+963 11 331 0666', available: '24/7' },
+                { name: '?? ICRC Syria', number: '+963 11 331 0667', available: '24/7' }
             ],
             HT: [
-                { name: '🚨 Police', number: '114', available: '24/7' },
-                { name: '🚑 Ambulance', number: '116', available: '24/7' },
-                { name: '❤️ Haitian Red Cross', number: '+509 2813 5678', available: '24/7' }
+                { name: '?? Police', number: '114', available: '24/7' },
+                { name: '?? Ambulance', number: '116', available: '24/7' },
+                { name: '?? Haitian Red Cross', number: '+509 2813 5678', available: '24/7' }
             ]
         };
         
@@ -1315,7 +1315,7 @@
                         radioBtn.classList.add('stop');
                         radioStatus.innerHTML = '<i class="fas fa-check-circle" style="color: var(--secondary);"></i> Playing: ' + 
                             document.getElementById('radioStation').selectedOptions[0].text;
-                        showToast('📻 Emergency radio connected');
+                        showToast('?? Emergency radio connected');
                     })
                     .catch(err => {
                         console.error('Radio error:', err);
@@ -1342,7 +1342,7 @@
                 const btn = document.querySelector('.copy-btn');
                 btn.innerHTML = '<i class="fas fa-check"></i>';
                 btn.classList.add('copied');
-                showToast('✅ ETH address copied!');
+                showToast('? ETH address copied!');
                 
                 setTimeout(() => {
                     btn.innerHTML = '<i class="fas fa-copy"></i>';
@@ -1378,7 +1378,7 @@
             ]);
             
             btn.innerHTML = '<i class="fas fa-sync-alt"></i> Refresh';
-            showToast('✅ All data refreshed');
+            showToast('? All data refreshed');
         }
         
         // ==================== MAP EVENT HANDLERS ====================
