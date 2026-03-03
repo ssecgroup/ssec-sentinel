@@ -28,7 +28,7 @@ from collectors.ssec_heatmap import HeatmapCollector
 from ssec_config import config
 
 # Initialize collectors
-acled = ACLEDCollector(config.ACLED_API_KEY, config.ACLED_EMAIL)
+acled = ACLEDCollector(config.ACLED_USERNAME, config.ACLED_PASSWORD)
 hdx = HDXCollector()
 views = VIEWSCollector()
 signals = HDXSignalsCollector()

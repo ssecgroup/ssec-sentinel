@@ -6,8 +6,10 @@ load_dotenv()
 
 class Config:
     # API Keys (get from https://developer.acleddata.com)
-    ACLED_API_KEY = os.getenv("ACLED_API_KEY", "")
-    ACLED_EMAIL = os.getenv("ACLED_EMAIL", "")
+    class Config:
+    ACLED_USERNAME = os.getenv("ACLED_USERNAME", "")
+    ACLED_PASSWORD = os.getenv("ACLED_PASSWORD", "")
+    # Remove old ACLED_API_KEY
     
     # HDX API (free, no key needed)
     HDX_BASE_URL = "https://hapi.humdata.org/api/v1"
