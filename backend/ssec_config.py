@@ -1,15 +1,18 @@
 """ssec-Sentinel Configuration"""
 import os
 from dotenv import load_dotenv
+from pathlib import Path
 
-load_dotenv()
+# Load environment variables
+env_path = Path(__file__).parent.parent / '.env'
+load_dotenv(dotenv_path=env_path)
 
 class Config:
-    # API Keys (get from https://developer.acleddata.com)
-    class Config:
+    """Configuration class for ssec-Sentinel"""
+    
+    # ACLED OAuth credentials
     ACLED_USERNAME = os.getenv("ACLED_USERNAME", "")
     ACLED_PASSWORD = os.getenv("ACLED_PASSWORD", "")
-    # Remove old ACLED_API_KEY
     
     # HDX API (free, no key needed)
     HDX_BASE_URL = "https://hapi.humdata.org/api/v1"
@@ -17,10 +20,6 @@ class Config:
     # Cache settings
     CACHE_TTL = 300  # 5 minutes
     REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379")
-    
-    # Update intervals (seconds)
-    CONFLICT_UPDATE_INTERVAL = 3600  # 1 hour
-    SIGNAL_UPDATE_INTERVAL = 300     # 5 minutes
-    FORECAST_UPDATE_INTERVAL = 86400 # 24 hours
-    
+
+# Create a global config instance
 config = Config()
