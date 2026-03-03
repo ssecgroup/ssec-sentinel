@@ -1,15 +1,21 @@
-﻿__pycache__
+# Python cache
+__pycache__/
 *.pyc
-venv
-env
-.env
-.git
-.github
-backend/__pycache__
-frontend/__pycache__
-tests
-examples
-scripts
-*.log
-.DS_Store
-Thumbs.db
+
+# Backend files (not needed on Vercel)
+backend/
+collectors/
+models/
+utils/
+requirements.txt
+*.py
+
+# Documentation
+docs/
+examples/
+scripts/
+tests/
+
+# Git
+.git/
+.gitignore
