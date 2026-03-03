@@ -3,16 +3,10 @@
     name: ssec-sentinel-api
     runtime: python
     plan: free
-    region: ohio  # or singapore, frankfurt
+    region: ohio
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn backend.ssec_app:app --host 0.0.0.0 --port $PORT
-    healthCheckPath: /api/health
+    healthCheckPath: /health
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.0
-      - key: ACLED_API_KEY
-        sync: false
-      - key: ACLED_EMAIL
-        sync: false
-      - key: ENVIRONMENT
-        value: production
