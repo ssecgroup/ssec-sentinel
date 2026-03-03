@@ -1,0 +1,15 @@
+﻿__pycache__
+*.pyc
+venv
+env
+.env
+.git
+.github
+backend/__pycache__
+frontend/__pycache__
+tests
+examples
+scripts
+*.log
+.DS_Store
+Thumbs.db
