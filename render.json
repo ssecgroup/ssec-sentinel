@@ -1,0 +1,13 @@
+﻿{
+  "services": [
+    {
+      "type": "web",
+      "name": "ssec-sentinel-api",
+      "runtime": "python",
+      "plan": "free",
+      "buildCommand": "pip install -r requirements.txt",
+      "startCommand": "uvicorn backend.ssec_app:app --host 0.0.0.0 --port ",
+      "healthCheckPath": "/api/health"
+    }
+  ]
+}
