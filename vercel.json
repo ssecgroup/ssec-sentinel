@@ -1,4 +1,4 @@
-﻿{
+{
   "builds": [
     {
       "src": "api/index.py",
@@ -16,7 +16,7 @@
     },
     {
       "src": "/(.*)",
-      "dest": "public/"
+      "dest": "public/$1"
     }
   ]
 }
