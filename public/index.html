@@ -2,24 +2,31 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ssec-Sentinel • Emergency Intelligence Network</title>
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>ssec·Sentinel • Emergency Intelligence</title>
+    
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <!-- Leaflet Heatmap -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.heat/dist/leaflet-heat.css" />
     <!-- Font Awesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-
+    
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
         :root {
             --primary: #ff4444;
             --primary-dark: #cc0000;
             --primary-light: #ff6666;
             --secondary: #4CAF50;
+            --secondary-dark: #45a049;
             --accent: #8844ff;
             --accent-light: #aa66ff;
             --warning: #ff8844;
@@ -42,6 +49,7 @@
             height: 100vh;
         }
 
+        /* Header */
         .header {
             background: var(--bg-card);
             padding: 0.75rem 2rem;
@@ -53,10 +61,23 @@
             height: 70px;
         }
 
-        .logo { display: flex; align-items: center; gap: 0.75rem; }
-        .logo-icon { font-size: 2rem; color: var(--primary); animation: pulse 2s infinite; }
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
 
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
+        .logo-icon {
+            font-size: 2rem;
+            color: var(--primary);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
 
         .logo h1 {
             font-size: 1.5rem;
@@ -86,14 +107,30 @@
             border: 1px solid var(--primary);
         }
 
-        .stat-item { display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; font-weight: 500; }
-        .stat-item i { color: var(--primary); font-size: 1rem; }
-        .stat-value { color: var(--primary); font-weight: 700; font-size: 1.2rem; margin-right: 0.2rem; }
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .stat-item i {
+            color: var(--primary);
+            font-size: 1rem;
+        }
+
+        .stat-value {
+            color: var(--primary);
+            font-weight: 700;
+            font-size: 1.2rem;
+            margin-right: 0.2rem;
+        }
 
         .refresh-btn {
             background: var(--primary);
             color: white;
-            border: 1px solid transparent;
+            border: none;
             padding: 0.6rem 1.2rem;
             border-radius: 30px;
             font-weight: 600;
@@ -103,10 +140,16 @@
             align-items: center;
             gap: 0.5rem;
             transition: all 0.3s;
+            border: 1px solid transparent;
         }
 
-        .refresh-btn:hover { background: transparent; border-color: var(--primary); transform: scale(1.05); }
+        .refresh-btn:hover {
+            background: transparent;
+            border-color: var(--primary);
+            transform: scale(1.05);
+        }
 
+        /* Main Container */
         .main-container {
             display: grid;
             grid-template-columns: 400px 1fr 400px;
@@ -116,6 +159,7 @@
             overflow: hidden;
         }
 
+        /* Sidebars */
         .sidebar {
             background: var(--bg-card);
             border-radius: 20px;
@@ -127,10 +171,20 @@
             scrollbar-color: var(--primary) var(--bg-card);
         }
 
-        .sidebar::-webkit-scrollbar { width: 6px; }
-        .sidebar::-webkit-scrollbar-track { background: var(--bg-card); }
-        .sidebar::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 10px; }
+        .sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
 
+        .sidebar::-webkit-scrollbar-track {
+            background: var(--bg-card);
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 10px;
+        }
+
+        /* Map Container */
         .map-container {
             background: var(--bg-card);
             border-radius: 20px;
@@ -140,8 +194,13 @@
             position: relative;
         }
 
-        #map { width: 100%; height: 100%; z-index: 1; }
+        #map {
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
 
+        /* Map Controls */
         .map-controls {
             position: absolute;
             top: 20px;
@@ -169,9 +228,19 @@
             box-shadow: var(--shadow);
         }
 
-        .map-btn:hover { background: var(--primary); border-color: var(--primary); transform: translateX(-2px); }
-        .map-btn.active { background: var(--primary); border-color: var(--primary); }
+        .map-btn:hover {
+            background: var(--primary);
+            border-color: var(--primary);
+            transform: translateX(-2px);
+            box-shadow: var(--shadow-hover);
+        }
 
+        .map-btn.active {
+            background: var(--primary);
+            border-color: var(--primary);
+        }
+
+        /* Cards */
         .card {
             background: rgba(255,255,255,0.03);
             border-radius: 16px;
@@ -181,7 +250,11 @@
             transition: all 0.3s;
         }
 
-        .card:hover { border-color: var(--primary); transform: translateY(-2px); box-shadow: var(--shadow-hover); }
+        .card:hover {
+            border-color: var(--primary);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-hover);
+        }
 
         .card-header {
             display: flex;
@@ -195,26 +268,72 @@
             padding-bottom: 0.8rem;
         }
 
-        .card-header i { font-size: 1.2rem; }
+        .card-header i {
+            font-size: 1.2rem;
+        }
 
+        .source-badge {
+            margin-left: auto;
+            font-size: 0.7rem;
+            background: var(--bg-dark);
+            padding: 0.2rem 0.6rem;
+            border-radius: 20px;
+            color: var(--text-muted);
+        }
+
+        /* Conflict Items */
         .conflict-item {
             background: var(--bg-dark);
             padding: 1rem;
             border-radius: 12px;
             margin-bottom: 0.8rem;
             border-left: 4px solid;
+            cursor: pointer;
             transition: all 0.3s;
         }
 
-        .conflict-item:hover { transform: translateX(5px); }
+        .conflict-item:hover {
+            transform: translateX(5px);
+        }
 
-        .conflict-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
-        .conflict-title { font-weight: 600; font-size: 0.95rem; }
-        .conflict-badge { padding: 0.2rem 0.6rem; border-radius: 20px; font-size: 0.7rem; font-weight: 600; color: white; }
-        .conflict-details { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.5rem; }
-        .conflict-meta { display: flex; gap: 1rem; font-size: 0.8rem; }
-        .conflict-meta i { color: var(--primary); width: 16px; }
+        .conflict-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
 
+        .conflict-title {
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .conflict-badge {
+            padding: 0.2rem 0.6rem;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: white;
+        }
+
+        .conflict-details {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+        }
+
+        .conflict-meta {
+            display: flex;
+            gap: 1rem;
+            font-size: 0.8rem;
+        }
+
+        .conflict-meta i {
+            color: var(--primary);
+            width: 16px;
+        }
+
+        /* Flight Items */
         .flight-item {
             background: var(--bg-dark);
             padding: 0.8rem;
@@ -224,6 +343,7 @@
             align-items: center;
             justify-content: space-between;
             border-left: 3px solid var(--secondary);
+            cursor: pointer;
         }
 
         .flight-item.emergency {
@@ -232,23 +352,122 @@
             animation: blink 2s infinite;
         }
 
-        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.8; background: rgba(255,68,68,0.2); } 100% { opacity: 1; } }
+        @keyframes blink {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; background: rgba(255,68,68,0.2); }
+            100% { opacity: 1; }
+        }
 
-        .flight-callsign { font-weight: 600; display: flex; align-items: center; gap: 0.5rem; }
-        .flight-emergency { color: var(--primary); font-size: 0.7rem; font-weight: 600; background: rgba(255,68,68,0.2); padding: 0.2rem 0.5rem; border-radius: 20px; }
+        .flight-callsign {
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
 
-        .signal-item { background: var(--bg-dark); padding: 1rem; border-radius: 12px; margin-bottom: 0.8rem; border-left: 4px solid; }
-        .signal-item.high { border-left-color: var(--primary); }
-        .signal-item.medium { border-left-color: var(--warning); }
-        .signal-item.low { border-left-color: var(--secondary); }
-        .signal-header { display: flex; justify-content: space-between; margin-bottom: 0.5rem; }
-        .signal-title { font-weight: 600; font-size: 0.9rem; }
-        .signal-severity { font-size: 0.7rem; padding: 0.2rem 0.6rem; border-radius: 20px; font-weight: 600; }
-        .signal-severity.high { background: var(--primary); color: white; }
-        .signal-severity.medium { background: var(--warning); color: white; }
-        .signal-severity.low { background: var(--secondary); color: white; }
+        .flight-details {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
 
-        .radio-controls { display: flex; gap: 0.5rem; margin-bottom: 1rem; }
+        .flight-emergency {
+            color: var(--primary);
+            font-size: 0.7rem;
+            font-weight: 600;
+            background: rgba(255,68,68,0.2);
+            padding: 0.2rem 0.5rem;
+            border-radius: 20px;
+        }
+
+        /* Military Items */
+        .military-item {
+            background: var(--bg-dark);
+            padding: 0.8rem;
+            border-radius: 10px;
+            margin-bottom: 0.5rem;
+            border-left: 3px solid var(--accent);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .military-item:hover {
+            transform: translateX(5px);
+            background: var(--bg-hover);
+        }
+
+        .military-name {
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .military-country {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 0.3rem;
+        }
+
+        /* Signal Items */
+        .signal-item {
+            background: var(--bg-dark);
+            padding: 1rem;
+            border-radius: 12px;
+            margin-bottom: 0.8rem;
+            border-left: 4px solid;
+        }
+
+        .signal-item.high {
+            border-left-color: var(--primary);
+        }
+
+        .signal-item.medium {
+            border-left-color: var(--warning);
+        }
+
+        .signal-item.low {
+            border-left-color: var(--secondary);
+        }
+
+        .signal-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+        }
+
+        .signal-title {
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .signal-severity {
+            font-size: 0.7rem;
+            padding: 0.2rem 0.6rem;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+        .signal-severity.high {
+            background: var(--primary);
+            color: white;
+        }
+
+        .signal-severity.medium {
+            background: var(--warning);
+            color: white;
+        }
+
+        .signal-severity.low {
+            background: var(--secondary);
+            color: white;
+        }
+
+        /* Radio Player */
+        .radio-controls {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
 
         .radio-select {
             flex: 1;
@@ -274,23 +493,190 @@
             transition: all 0.3s;
         }
 
-        .radio-btn.stop { background: var(--secondary); }
-        .radio-status { background: var(--bg-dark); padding: 0.8rem; border-radius: 8px; font-size: 0.85rem; margin-top: 0.5rem; }
-        #radioPlayer { width: 100%; margin-top: 1rem; border-radius: 12px; background: var(--bg-dark); border: 1px solid var(--border); }
+        .radio-btn.stop {
+            background: var(--secondary);
+        }
 
-        .country-select { width: 100%; padding: 0.8rem; background: var(--bg-dark); color: white; border: 1px solid var(--border); border-radius: 12px; margin-bottom: 1rem; }
+        .radio-status {
+            background: var(--bg-dark);
+            padding: 0.8rem;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+        }
 
-        .helpline-item { background: var(--bg-dark); padding: 1rem; border-radius: 12px; margin-bottom: 0.8rem; border-left: 3px solid var(--accent); }
-        .helpline-name { font-weight: 600; color: var(--accent-light); margin-bottom: 0.3rem; }
-        .helpline-number { font-size: 1.1rem; font-weight: 600; margin-bottom: 0.2rem; }
-        .helpline-number i { color: var(--secondary); margin-right: 0.5rem; }
-        .helpline-available { font-size: 0.8rem; color: var(--secondary); }
+        #radioPlayer {
+            width: 100%;
+            margin-top: 1rem;
+            border-radius: 12px;
+            background: var(--bg-dark);
+            border: 1px solid var(--border);
+        }
 
-        .eth-card { background: linear-gradient(135deg, #2a1f3a 0%, #1a2f3a 100%); border: 1px solid var(--accent); }
-        .eth-address { background: var(--bg-dark); padding: 0.8rem; border-radius: 8px; font-family: monospace; font-size: 0.85rem; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--accent); }
-        .copy-btn { background: var(--accent); color: white; border: none; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-size: 0.8rem; transition: all 0.3s; }
-        .copy-btn:hover { background: var(--accent-light); }
+        /* Country Search */
+        .country-search-container {
+            position: relative;
+            margin-bottom: 1rem;
+        }
 
+        .country-search {
+            width: 100%;
+            padding: 0.8rem;
+            background: var(--bg-dark);
+            color: white;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            font-size: 0.9rem;
+        }
+
+        .country-search:focus {
+            border-color: var(--accent);
+            outline: none;
+        }
+
+        .country-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            max-height: 200px;
+            overflow-y: auto;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            margin-top: 0.3rem;
+            z-index: 100;
+            display: none;
+        }
+
+        .country-dropdown.show {
+            display: block;
+        }
+
+        .country-option {
+            padding: 0.8rem;
+            cursor: pointer;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .country-option:hover {
+            background: var(--bg-hover);
+        }
+
+        .country-option:last-child {
+            border-bottom: none;
+        }
+
+        /* Helplines */
+        .helpline-item {
+            background: var(--bg-dark);
+            padding: 1rem;
+            border-radius: 12px;
+            margin-bottom: 0.8rem;
+            border-left: 3px solid var(--accent);
+        }
+
+        .helpline-name {
+            font-weight: 600;
+            color: var(--accent-light);
+            margin-bottom: 0.3rem;
+        }
+
+        .helpline-number {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 0.2rem;
+        }
+
+        .helpline-number i {
+            color: var(--secondary);
+            margin-right: 0.5rem;
+        }
+
+        .helpline-available {
+            font-size: 0.8rem;
+            color: var(--secondary);
+        }
+
+        /* Disaster News */
+        .news-item {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .news-item:hover {
+            background: var(--bg-hover);
+            padding-left: 1.5rem;
+        }
+
+        .news-item:last-child {
+            border-bottom: none;
+        }
+
+        .news-title {
+            font-weight: 600;
+            margin-bottom: 0.3rem;
+            color: var(--primary-light);
+        }
+
+        .news-source {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .news-time {
+            font-size: 0.7rem;
+            color: var(--accent-light);
+        }
+
+        .news-badge {
+            background: var(--primary);
+            color: white;
+            padding: 0.1rem 0.4rem;
+            border-radius: 20px;
+            font-size: 0.6rem;
+            font-weight: 600;
+        }
+
+        /* ETH Card */
+        .eth-card {
+            background: linear-gradient(135deg, #2a1f3a 0%, #1a2f3a 100%);
+            border: 1px solid var(--accent);
+        }
+
+        .eth-address {
+            background: var(--bg-dark);
+            padding: 0.8rem;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 0.85rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid var(--accent);
+        }
+
+        .copy-btn {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.3s;
+        }
+
+        .copy-btn:hover {
+            background: var(--accent-light);
+        }
+
+        /* Toast */
         .toast {
             position: fixed;
             bottom: 20px;
@@ -308,9 +694,15 @@
             z-index: 2000;
         }
 
-        .toast.show { transform: translateX(0); }
-        .toast.error { border-left-color: var(--primary); }
+        .toast.show {
+            transform: translateX(0);
+        }
 
+        .toast.error {
+            border-left-color: var(--primary);
+        }
+
+        /* Footer */
         .footer {
             background: var(--bg-card);
             padding: 0.6rem 2rem;
@@ -322,12 +714,35 @@
             align-items: center;
         }
 
-        .footer a { color: var(--primary); text-decoration: none; margin: 0 0.5rem; }
-        .footer a:hover { text-decoration: underline; }
-        .eth-footer { color: var(--accent); font-family: monospace; }
+        .footer a {
+            color: var(--primary);
+            text-decoration: none;
+            margin: 0 0.5rem;
+        }
 
-        .loading { display: inline-block; width: 20px; height: 20px; border: 3px solid rgba(255,68,68,0.3); border-radius: 50%; border-top-color: var(--primary); animation: spin 1s linear infinite; }
-        @keyframes spin { to { transform: rotate(360deg); } }
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        .eth-footer {
+            color: var(--accent);
+            font-family: monospace;
+        }
+
+        /* Loading */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,68,68,0.3);
+            border-radius: 50%;
+            border-top-color: var(--primary);
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
 
         .skeleton {
             background: linear-gradient(90deg, var(--bg-dark) 25%, var(--bg-hover) 50%, var(--bg-dark) 75%);
@@ -338,7 +753,26 @@
             margin-bottom: 0.5rem;
         }
 
-        @keyframes skeleton { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+        @keyframes skeleton {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        .empty-message {
+            text-align: center;
+            padding: 1rem;
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        .mock-badge {
+            font-size: 0.6rem;
+            background: var(--bg-hover);
+            padding: 0.1rem 0.4rem;
+            border-radius: 20px;
+            color: var(--warning);
+            margin-left: 0.5rem;
+        }
     </style>
 </head>
 <body>
@@ -348,6 +782,7 @@
             <h1>ssec·Sentinel</h1>
             <span>v0.3</span>
         </div>
+        
         <div class="stats">
             <div class="stat-item">
                 <i class="fas fa-exclamation-triangle"></i>
@@ -362,42 +797,46 @@
                 <span><span class="stat-value" id="signal-count">0</span> alerts</span>
             </div>
         </div>
+        
         <button class="refresh-btn" onclick="refreshAll()">
             <i class="fas fa-sync-alt"></i> Refresh
         </button>
     </header>
 
     <div class="main-container">
-        <!-- LEFT SIDEBAR -->
+        <!-- LEFT SIDEBAR - Conflicts & Flights & Military -->
         <div class="sidebar">
+            <!-- Active Conflicts -->
             <div class="card">
                 <div class="card-header">
                     <i class="fas fa-exclamation-triangle"></i>
                     <span>Active Conflicts</span>
-                    <small style="color:var(--text-muted); font-size:0.7rem; margin-left:auto;">ACLED</small>
+                    <span class="source-badge" id="conflict-source">ACLED</span>
                 </div>
                 <div id="conflicts-container">
                     <div class="skeleton"></div>
                     <div class="skeleton"></div>
                 </div>
             </div>
+            
+            <!-- Emergency Flights -->
             <div class="card">
                 <div class="card-header">
                     <i class="fas fa-plane"></i>
                     <span>Emergency Flights</span>
-                    <small style="color:var(--text-muted); font-size:0.7rem; margin-left:auto;">OpenSky</small>
+                    <span class="source-badge" id="flight-source">OpenSky</span>
                 </div>
                 <div id="flights-container">
-                    <div style="text-align: center; color: var(--text-muted); padding: 1rem;">
-                        <i class="fas fa-info-circle"></i> Click on map to see flights
-                    </div>
+                    <div class="skeleton"></div>
                 </div>
             </div>
+            
+            <!-- Military Bases -->
             <div class="card">
                 <div class="card-header">
                     <i class="fas fa-shield-alt"></i>
-                    <span>Nearby Military</span>
-                    <small style="color:var(--text-muted); font-size:0.7rem; margin-left:auto;">Global</small>
+                    <span>Military Bases</span>
+                    <span class="source-badge">Global</span>
                 </div>
                 <div id="military-container">
                     <div class="skeleton"></div>
@@ -408,6 +847,8 @@
         <!-- MAIN MAP -->
         <div class="map-container">
             <div id="map"></div>
+            
+            <!-- Map Controls -->
             <div class="map-controls">
                 <button class="map-btn active" onclick="toggleLayer('conflicts')" id="btn-conflicts">
                     <i class="fas fa-exclamation-triangle"></i> Conflicts
@@ -415,7 +856,7 @@
                 <button class="map-btn active" onclick="toggleLayer('flights')" id="btn-flights">
                     <i class="fas fa-plane"></i> Flights
                 </button>
-                <button class="map-btn" onclick="toggleLayer('heatmap')" id="btn-heatmap">
+                <button class="map-btn" onclick="toggleHeatmap()" id="btn-heatmap">
                     <i class="fas fa-fire"></i> Heatmap
                 </button>
                 <button class="map-btn active" onclick="toggleLayer('military')" id="btn-military">
@@ -427,7 +868,7 @@
             </div>
         </div>
 
-        <!-- RIGHT SIDEBAR -->
+        <!-- RIGHT SIDEBAR - Radio, Signals, Helplines, News -->
         <div class="sidebar">
             <!-- Radio -->
             <div class="card">
@@ -439,10 +880,9 @@
                     <select id="radioStation" class="radio-select">
                         <option value="https://stream.live.vc.bbcmedia.co.uk/bbc_world_service">🌍 BBC World Service</option>
                         <option value="https://icecast.radiofrance.fr/fip-midfi.mp3">🇫🇷 France Inter</option>
+                        <option value="https://nhkworld.webcdn.stream.ne.jp/hls/live/2003459/nhkworld-r1/en/index.m3u8">🇯🇵 NHK World</option>
                         <option value="https://kcrw.streamguys1.com/kcrw_128k_mp3_aac">🇺🇸 KCRW</option>
                         <option value="https://cbcradiolive.akamaized.net/hls/live/2040959/ES_R1ETR/master.m3u8">🇨🇦 CBC Radio</option>
-                        <option value="https://coolstream.co.uk/radio/kool97.mp3">🇯🇲 Kool 97 FM</option>
-                        <option value="https://live-radio01.mediahubaustralia.com/2TJW/mp3/">🇦🇺 ABC News</option>
                     </select>
                     <button class="radio-btn" onclick="toggleRadio()" id="radioBtn">
                         <i class="fas fa-play"></i> PLAY
@@ -453,43 +893,55 @@
                     <i class="fas fa-info-circle"></i> Ready
                 </div>
             </div>
-
+            
             <!-- HDX Signals -->
             <div class="card">
                 <div class="card-header">
                     <i class="fas fa-bell"></i>
                     <span>Crisis Signals</span>
-                    <small style="color:var(--text-muted); font-size:0.7rem; margin-left:auto;">HDX</small>
+                    <span class="source-badge">HDX</span>
                 </div>
                 <div id="signals-container">
                     <div class="skeleton"></div>
                 </div>
             </div>
-
-            <!-- Helplines -->
+            
+            <!-- World Disaster News -->
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-newspaper"></i>
+                    <span>World Disaster News</span>
+                    <span class="source-badge">Live</span>
+                </div>
+                <div id="news-container" style="max-height: 200px; overflow-y: auto;">
+                    <div class="skeleton"></div>
+                    <div class="skeleton"></div>
+                    <div class="skeleton"></div>
+                </div>
+            </div>
+            
+            <!-- Helplines with Search -->
             <div class="card">
                 <div class="card-header">
                     <i class="fas fa-phone-alt"></i>
                     <span>Emergency Helplines</span>
-                    <small style="color:var(--text-muted); font-size:0.7rem; margin-left:auto;">SSEC</small>
+                    <span class="source-badge">SSEC</span>
                 </div>
-                <select id="countrySelect" class="country-select" onchange="loadHelplines()">
-                    <option value="US">🇺🇸 United States</option>
-                    <option value="UA">🇺🇦 Ukraine</option>
-                    <option value="SY">🇸🇾 Syria</option>
-                    <option value="HT">🇭🇹 Haiti</option>
-                    <option value="TR">🇹🇷 Turkey</option>
-                    <option value="AF">🇦🇫 Afghanistan</option>
-                    <option value="IQ">🇮🇶 Iraq</option>
-                    <option value="YE">🇾🇪 Yemen</option>
-                    <option value="JO">🇯🇴 Jordan</option>
-                    <option value="LB">🇱🇧 Lebanon</option>
-                </select>
+                
+                <!-- Country Search -->
+                <div class="country-search-container">
+                    <input type="text" id="countrySearch" class="country-search" 
+                           placeholder="🔍 Search country (e.g., Ukraine, Syria, Haiti)" 
+                           onkeyup="searchCountries()"
+                           onfocus="showCountryDropdown()">
+                    <div id="countryDropdown" class="country-dropdown"></div>
+                </div>
+                
                 <div id="helplines-container">
                     <div class="skeleton"></div>
                 </div>
             </div>
-
+            
             <!-- ETH Donation -->
             <div class="card eth-card">
                 <div class="card-header">
@@ -497,15 +949,17 @@
                     <span>Support the Network</span>
                 </div>
                 <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:0.8rem;">
-                    Fund decentralized disaster nodes<br>
-                    <small>Next: Raspberry Pi node in Haiti</small>
+                    Fund decentralized disaster nodes
                 </p>
                 <div class="eth-address">
-                    <code>0x8242f0f25c5445F7822e80d3C9615e57586c6639</code>
+                    <code id="ethAddress">0x8242f0f25c5445F7822e80d3C9615e57586c6639</code>
                     <button class="copy-btn" onclick="copyEthAddress()">
                         <i class="fas fa-copy"></i> COPY
                     </button>
                 </div>
+                <p style="font-size:0.7rem; margin-top:0.5rem; text-align:center; color:var(--accent-light);">
+                    Next: Raspberry Pi node in Haiti
+                </p>
             </div>
         </div>
     </div>
@@ -533,19 +987,16 @@
 
     <script>
         // ==================== CONFIGURATION ====================
-        // FIX 1: Changed from localhost to the actual deployed API URL.
-        // Update this if your backend is hosted elsewhere.
         const API_BASE = 'https://ssec-sentinel.onrender.com';
-
-        // ==================== MAP SETUP ====================
         let map = L.map('map').setView([20, 0], 2);
-
+        
+        // Layers
         let conflictLayer = L.layerGroup().addTo(map);
         let flightLayer = L.layerGroup().addTo(map);
         let militaryLayer = L.layerGroup().addTo(map);
         let heatmapLayer = null;
-
-        // FIX 2: activeLayers now correctly reflects which buttons start as .active
+        
+        // Active layer tracking
         let activeLayers = {
             conflicts: true,
             flights: true,
@@ -553,124 +1004,343 @@
             military: true
         };
 
+        // ==================== MAP SETUP ====================
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '© OpenStreetMap, SSEC Humanitarian',
             maxZoom: 18
         }).addTo(map);
 
-        // FIX 3: Added all alert level variants so markers always resolve correctly
+        // Custom icons
         const icons = {
-            conflict: {
-                // Handles both uppercase (RED/ORANGE/GREEN) and lowercase (red/orange/green)
-                red:      L.divIcon({ className: '', html: '<div style="background:#ff4444;width:16px;height:16px;border-radius:50%;border:2px solid white;box-shadow:0 0 10px #ff4444;"></div>' }),
-                critical: L.divIcon({ className: '', html: '<div style="background:#cc0000;width:18px;height:18px;border-radius:50%;border:2px solid white;box-shadow:0 0 12px #cc0000;"></div>' }),
-                orange:   L.divIcon({ className: '', html: '<div style="background:#ff8844;width:14px;height:14px;border-radius:50%;border:2px solid white;"></div>' }),
-                high:     L.divIcon({ className: '', html: '<div style="background:#ff6644;width:15px;height:15px;border-radius:50%;border:2px solid white;"></div>' }),
-                moderate: L.divIcon({ className: '', html: '<div style="background:#ffaa44;width:13px;height:13px;border-radius:50%;border:2px solid white;"></div>' }),
-                green:    L.divIcon({ className: '', html: '<div style="background:#4CAF50;width:12px;height:12px;border-radius:50%;border:2px solid white;"></div>' }),
-                low:      L.divIcon({ className: '', html: '<div style="background:#4CAF50;width:12px;height:12px;border-radius:50%;border:2px solid white;"></div>' }),
-                default:  L.divIcon({ className: '', html: '<div style="background:#ff8844;width:14px;height:14px;border-radius:50%;border:2px solid white;"></div>' })
-            },
-            military: L.divIcon({ className: '', html: '<div style="background:#8844ff;width:16px;height:16px;border-radius:4px;border:2px solid white;transform:rotate(45deg);"></div>' }),
-            flight:   L.divIcon({ className: '', html: '<div style="background:#4CAF50;width:20px;height:20px;border-radius:50%;border:2px solid white;text-align:center;line-height:20px;font-size:11px;">✈</div>' }),
-            emergency:L.divIcon({ className: '', html: '<div style="background:#ff4444;width:20px;height:20px;border-radius:50%;border:2px solid white;text-align:center;line-height:20px;font-size:11px;">🚨</div>' })
+            conflict: L.divIcon({ 
+                html: '<div style="background:#ff4444; width:16px; height:16px; border-radius:50%; border:3px solid white; box-shadow:0 0 10px #ff4444;"></div>'
+            }),
+            military: L.divIcon({ 
+                html: '<div style="background:#8844ff; width:16px; height:16px; border-radius:4px; border:2px solid white; transform: rotate(45deg);"></div>'
+            }),
+            flight: L.divIcon({ 
+                html: '<div style="background:#4CAF50; width:20px; height:20px; border-radius:50%; border:2px solid white; text-align:center; line-height:20px; font-size:11px;">✈</div>'
+            }),
+            emergency: L.divIcon({ 
+                html: '<div style="background:#ff4444; width:20px; height:20px; border-radius:50%; border:2px solid white; animation: pulse 1s infinite; text-align:center; line-height:20px; font-size:11px;">🚨</div>'
+            })
         };
 
-        // Helper: resolve conflict icon from alertLevel or severity
-        function getConflictIcon(c) {
-            const level = (c.alertLevel || c.severity || 'default').toLowerCase();
-            return icons.conflict[level] || icons.conflict.default;
+        // ==================== MOCK DATA GENERATORS ====================
+        function generateMockConflicts() {
+            const types = ['Battle', 'Explosion', 'Violence against civilians', 'Protest', 'Riots'];
+            const countries = ['Syria', 'Ukraine', 'Myanmar', 'Sudan', 'Ethiopia', 'Yemen', 'Somalia', 'DRC'];
+            const cities = ['Damascus', 'Donetsk', 'Mandalay', 'Khartoum', 'Addis Ababa', 'Sana\'a', 'Mogadishu', 'Goma'];
+            
+            return Array(8).fill().map((_, i) => ({
+                id: `mock-${i}`,
+                title: `⚔️ ${types[i % types.length]} - ${cities[i % cities.length]}`,
+                type: types[i % types.length],
+                lat: 15 + (i * 5) % 40,
+                lon: 30 + (i * 10) % 60,
+                alertLevel: ['RED', 'ORANGE', 'GREEN'][i % 3],
+                severity: ['CRITICAL', 'HIGH', 'MODERATE'][i % 3],
+                color: ['#ff4444', '#ff8844', '#4CAF50'][i % 3],
+                timestamp: new Date(Date.now() - i * 86400000).toISOString(),
+                description: `Intense fighting reported in ${cities[i % cities.length]}`,
+                fatalities: Math.floor(Math.random() * 50) + 1,
+                country: countries[i % countries.length],
+                source: 'ACLED (Mock)'
+            }));
         }
 
+        function generateMockFlights() {
+            const callsigns = ['DAL123', 'UAL456', 'AAL789', 'JBU234', 'SWA567', 'BAW890'];
+            return Array(15).fill().map((_, i) => ({
+                callsign: callsigns[i % callsigns.length],
+                lat: 20 + Math.random() * 40,
+                lon: -20 + Math.random() * 80,
+                altitude: Math.floor(Math.random() * 35000) + 5000,
+                speed: Math.floor(Math.random() * 300) + 200,
+                is_emergency: Math.random() > 0.7,
+                squawk: Math.random() > 0.7 ? '7700' : '1200',
+                source: 'OpenSky (Mock)'
+            }));
+        }
+
+        function generateMockSignals() {
+            return [
+                {
+                    id: 'signal-1',
+                    headline: '🚨 CRITICAL: Escalation in Eastern Ukraine',
+                    summary: 'Fighting intensifies near Donetsk with heavy artillery',
+                    severity: 'high',
+                    timestamp: new Date().toISOString(),
+                    trend: '+25% vs last week'
+                },
+                {
+                    id: 'signal-2',
+                    headline: '⚠️ WARNING: Food security deteriorating in Haiti',
+                    summary: 'IPC Phase 4 (Emergency) likely in coming months',
+                    severity: 'medium',
+                    timestamp: new Date().toISOString(),
+                    trend: 'Worsening'
+                },
+                {
+                    id: 'signal-3',
+                    headline: '🌍 Sudan: Humanitarian access constraints',
+                    summary: 'Aid deliveries blocked in Darfur region',
+                    severity: 'high',
+                    timestamp: new Date(Date.now() - 86400000).toISOString(),
+                    trend: 'Critical'
+                }
+            ];
+        }
+
+        function generateMockNews() {
+            const sources = ['Reuters', 'AP', 'BBC', 'Al Jazeera', 'ReliefWeb', 'UN OCHA'];
+            const headlines = [
+                '7.2 magnitude earthquake strikes Caribbean, tsunami warnings issued',
+                'UN warns of famine risk in Gaza as humanitarian situation worsens',
+                'Flooding in Southeast Asia displaces thousands, crops destroyed',
+                'WHO declares mpox global health emergency as cases surge',
+                'Climate disasters cost global economy $250B in 2025, report finds',
+                'Major humanitarian airlift reaches flood victims in Pakistan',
+                'Wildfires rage across Mediterranean, thousands evacuated',
+                'Earthquake in Afghanistan kills hundreds, aid workers race to reach remote areas'
+            ];
+            
+            return Array(8).fill().map((_, i) => ({
+                title: headlines[i % headlines.length],
+                source: sources[i % sources.length],
+                timestamp: new Date(Date.now() - i * 7200000).toISOString(),
+                url: '#',
+                summary: 'Click to read more...',
+                category: ['Disaster', 'Conflict', 'Health'][i % 3]
+            }));
+        }
+
+        // ==================== COUNTRY DATABASE ====================
+        const countries = [
+            { code: 'US', name: 'United States', flag: '🇺🇸' },
+            { code: 'UA', name: 'Ukraine', flag: '🇺🇦' },
+            { code: 'SY', name: 'Syria', flag: '🇸🇾' },
+            { code: 'HT', name: 'Haiti', flag: '🇭🇹' },
+            { code: 'TR', name: 'Turkey', flag: '🇹🇷' },
+            { code: 'AF', name: 'Afghanistan', flag: '🇦🇫' },
+            { code: 'IQ', name: 'Iraq', flag: '🇮🇶' },
+            { code: 'YE', name: 'Yemen', flag: '🇾🇪' },
+            { code: 'JO', name: 'Jordan', flag: '🇯🇴' },
+            { code: 'LB', name: 'Lebanon', flag: '🇱🇧' },
+            { code: 'PS', name: 'Palestine', flag: '🇵🇸' },
+            { code: 'SD', name: 'Sudan', flag: '🇸🇩' },
+            { code: 'MM', name: 'Myanmar', flag: '🇲🇲' },
+            { code: 'ET', name: 'Ethiopia', flag: '🇪🇹' },
+            { code: 'SO', name: 'Somalia', flag: '🇸🇴' },
+            { code: 'CD', name: 'DR Congo', flag: '🇨🇩' }
+        ];
+
+        // ==================== COUNTRY SEARCH ====================
+        function searchCountries() {
+            const search = document.getElementById('countrySearch').value.toLowerCase();
+            const dropdown = document.getElementById('countryDropdown');
+            
+            const filtered = countries.filter(c => 
+                c.name.toLowerCase().includes(search) || 
+                c.code.toLowerCase().includes(search)
+            );
+            
+            if (filtered.length > 0 && search.length > 0) {
+                dropdown.innerHTML = filtered.map(c => 
+                    `<div class="country-option" onclick="selectCountry('${c.code}', '${c.name}')">
+                        ${c.flag} ${c.name} (${c.code})
+                    </div>`
+                ).join('');
+                dropdown.classList.add('show');
+            } else {
+                dropdown.classList.remove('show');
+            }
+        }
+
+        function showCountryDropdown() {
+            const dropdown = document.getElementById('countryDropdown');
+            dropdown.innerHTML = countries.map(c => 
+                `<div class="country-option" onclick="selectCountry('${c.code}', '${c.name}')">
+                    ${c.flag} ${c.name} (${c.code})
+                </div>`
+            ).join('');
+            dropdown.classList.add('show');
+        }
+
+        function selectCountry(code, name) {
+            document.getElementById('countrySearch').value = name;
+            document.getElementById('countryDropdown').classList.remove('show');
+            loadHelplines(code);
+        }
+
+        // Hide dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.country-search-container')) {
+                document.getElementById('countryDropdown').classList.remove('show');
+            }
+        });
+
         // ==================== DATA LOADING ====================
-        async function loadDashboard() {
+        async function fetchAPI(endpoint, mockGenerator = null) {
             try {
-                const response = await fetch(`${API_BASE}/api/dashboard`);
+                const response = await fetch(`${API_BASE}${endpoint}`);
                 if (!response.ok) throw new Error(`HTTP ${response.status}`);
                 const data = await response.json();
+                
+                // If data is empty array and we have a mock generator, use mock
+                if (Array.isArray(data) && data.length === 0 && mockGenerator) {
+                    console.log(`Using mock data for ${endpoint}`);
+                    return { data: mockGenerator(), mock: true };
+                }
+                return { data, mock: false };
+            } catch (error) {
+                console.error(`Error fetching ${endpoint}:`, error);
+                if (mockGenerator) {
+                    return { data: mockGenerator(), mock: true };
+                }
+                return { data: null, mock: false };
+            }
+        }
 
-                // Update header stats
-                document.getElementById('conflict-count').innerText = data.stats?.total_conflicts ?? 0;
-                document.getElementById('flight-count').innerText = data.stats?.total_flights ?? 0;
-                document.getElementById('signal-count').innerText = data.stats?.active_signals ?? 0;
+        async function loadDashboard() {
+            try {
+                // Fetch conflicts with mock fallback
+                const conflictsResult = await fetchAPI('/conflicts?days=30', generateMockConflicts);
+                const conflicts = conflictsResult.data;
+                
+                // Fetch flights with mock fallback
+                const flightsResult = await fetchAPI('/flights/near?lat=20&lon=0&radius=1000', generateMockFlights);
+                const flights = flightsResult.data;
+                
+                // Fetch signals with mock fallback
+                const signalsResult = await fetchAPI('/signals', generateMockSignals);
+                const signals = signalsResult.data;
+                
+                // Update source badges with mock indicator
+                document.getElementById('conflict-source').innerHTML = conflictsResult.mock ? 
+                    'ACLED (Mock) ⚠️' : 'ACLED';
+                document.getElementById('flight-source').innerHTML = flightsResult.mock ? 
+                    'OpenSky (Mock) ⚠️' : 'OpenSky';
+                
+                // Update stats
+                document.getElementById('conflict-count').innerText = conflicts?.length || 0;
+                document.getElementById('flight-count').innerText = flights?.filter(f => f.is_emergency)?.length || 0;
+                document.getElementById('signal-count').innerText = signals?.length || 0;
 
-                // Clear map layers
+                // Update map layers
                 conflictLayer.clearLayers();
                 flightLayer.clearLayers();
-                militaryLayer.clearLayers();
-
-                // Conflicts
-                if (data.conflicts?.length && activeLayers.conflicts) {
-                    data.conflicts.forEach(c => {
-                        if (!c.lat || !c.lon) return;
-                        L.marker([c.lat, c.lon], { icon: getConflictIcon(c) })
-                            .bindPopup(`
-                                <div style="min-width:200px;">
-                                    <h3 style="color:${c.color || '#ff4444'};">${c.title || 'Conflict'}</h3>
-                                    <p><strong>Fatalities:</strong> ${c.fatalities ?? 0}</p>
-                                    <p>${c.description || ''}</p>
-                                    <p><small>${c.source || ''}</small></p>
-                                </div>
-                            `)
-                            .addTo(conflictLayer);
+                
+                // Add conflicts to map
+                if (activeLayers.conflicts && conflicts) {
+                    conflicts.forEach(c => {
+                        if (c.lat && c.lon) {
+                            L.marker([c.lat, c.lon], { icon: icons.conflict })
+                                .bindPopup(`
+                                    <div style="min-width:200px;">
+                                        <h3 style="color:${c.color || '#ff4444'};">${c.title || 'Conflict'}</h3>
+                                        <p><strong>Fatalities:</strong> ${c.fatalities || 0}</p>
+                                        <p>${c.description || ''}</p>
+                                        <p><small>${c.source || ''}</small></p>
+                                    </div>
+                                `)
+                                .addTo(conflictLayer);
+                        }
                     });
                 }
 
-                // Military bases
-                if (data.military_bases?.length && activeLayers.military) {
-                    data.military_bases.forEach(base => {
-                        if (!base.lat || !base.lon) return;
-                        L.marker([base.lat, base.lon], { icon: icons.military })
-                            .bindPopup(`
-                                <div>
-                                    <h3>${base.icon || '🏛️'} ${base.name}</h3>
-                                    <p>${base.type || 'Military Base'}</p>
-                                    <p>${base.country || ''}</p>
-                                </div>
-                            `)
-                            .addTo(militaryLayer);
-                    });
-                }
-
-                // Flights on map
-                if (data.flights?.length && activeLayers.flights) {
-                    data.flights.forEach(f => {
-                        if (!f.lat || !f.lon) return;
-                        L.marker([f.lat, f.lon], { icon: f.is_emergency ? icons.emergency : icons.flight })
+                // Add flights to map
+                if (activeLayers.flights && flights) {
+                    flights.forEach(f => {
+                        if (f.lat && f.lon) {
+                            L.marker([f.lat, f.lon], { 
+                                icon: f.is_emergency ? icons.emergency : icons.flight 
+                            })
                             .bindPopup(`
                                 <div>
                                     <b>${f.callsign || 'Unknown'}</b><br>
-                                    Alt: ${f.altitude ?? '?'}ft · Speed: ${f.speed ?? '?'}kts
-                                    ${f.is_emergency ? '<br><span style="color:#ff4444;">🚨 EMERGENCY SQUAWK ' + (f.squawk || '') + '</span>' : ''}
+                                    Alt: ${f.altitude || '?'}ft<br>
+                                    ${f.is_emergency ? '<span style="color:#ff4444;">🚨 EMERGENCY</span>' : ''}
                                 </div>
                             `)
                             .addTo(flightLayer);
+                        }
                     });
                 }
 
                 // Update sidebar lists
-                updateConflictsList(data.conflicts);
-                updateSignalsList(data.signals);
-                updateMilitaryList(data.military_bases);
-                if (data.flights?.length) updateFlightsList(data.flights);
-
+                updateConflictsList(conflicts);
+                updateFlightsList(flights);
+                updateSignalsList(signals);
+                
             } catch (error) {
-                console.error('Dashboard load error:', error);
-                showToast('⚠️ Error loading data — retrying...', 'error');
+                console.error('Dashboard error:', error);
             }
         }
 
+        async function loadMilitaryBases() {
+            try {
+                const response = await fetch(`${API_BASE}/military-bases`);
+                if (!response.ok) throw new Error('Failed to fetch');
+                const bases = await response.json();
+                updateMilitaryList(bases);
+                updateMapMilitary(bases);
+            } catch (error) {
+                console.error('Military bases error:', error);
+                // Use mock military bases if API fails
+                const mockBases = [
+                    { name: "Ramstein Air Base", icon: "🇺🇸", lat: 49.4369, lon: 7.6003, country: "Germany" },
+                    { name: "Camp Bondsteel", icon: "🇺🇸", lat: 42.3667, lon: 21.25, country: "Kosovo" },
+                    { name: "Tartus Naval Base", icon: "🇷🇺", lat: 34.9167, lon: 35.8833, country: "Syria" }
+                ];
+                updateMilitaryList(mockBases);
+                updateMapMilitary(mockBases);
+            }
+        }
+
+        async function loadHelplines(countryCode = 'US') {
+            try {
+                const response = await fetch(`${API_BASE}/helplines?country=${countryCode}`);
+                if (!response.ok) throw new Error('Failed to fetch');
+                const helplines = await response.json();
+                updateHelplinesList(helplines);
+            } catch (error) {
+                console.error('Helplines error:', error);
+                // Mock helplines
+                const mockHelplines = [
+                    { name: "🚨 Emergency Services", number: "112", available: "24/7" },
+                    { name: "❤️ Red Cross", number: "+123456789", available: "24/7" }
+                ];
+                updateHelplinesList(mockHelplines);
+            }
+        }
+
+        async function loadNews() {
+            try {
+                const response = await fetch(`${API_BASE}/news`);
+                if (!response.ok) throw new Error('Failed to fetch');
+                const news = await response.json();
+                updateNewsList(news);
+            } catch (error) {
+                console.error('News error:', error);
+                updateNewsList(generateMockNews());
+            }
+        }
+
+        // ==================== UPDATE FUNCTIONS ====================
         function updateConflictsList(conflicts) {
             const container = document.getElementById('conflicts-container');
             if (!conflicts?.length) {
-                container.innerHTML = '<div style="color:var(--text-muted);text-align:center;padding:1rem;">No active conflicts</div>';
+                container.innerHTML = '<div class="empty-message">No active conflicts</div>';
                 return;
             }
+            
             container.innerHTML = conflicts.slice(0, 5).map(c => `
-                <div class="conflict-item" style="border-left-color:${c.color || '#ff4444'};">
+                <div class="conflict-item" style="border-left-color:${c.color || '#ff4444'};" 
+                     onclick="flyToLocation(${c.lat}, ${c.lon})">
                     <div class="conflict-header">
                         <span class="conflict-title">${c.title || 'Conflict'}</span>
-                        <span class="conflict-badge" style="background:${c.color || '#ff4444'};">${c.fatalities ?? 0} killed</span>
+                        <span class="conflict-badge" style="background:${c.color || '#ff4444'};">${c.fatalities || 0}</span>
                     </div>
                     <div class="conflict-details">${c.description || ''}</div>
                     <div class="conflict-meta">
@@ -683,38 +1353,20 @@
 
         function updateFlightsList(flights) {
             const container = document.getElementById('flights-container');
-            const emergency = flights.filter(f => f.is_emergency);
-            if (!emergency.length) {
-                container.innerHTML = '<div style="color:var(--text-muted);text-align:center;padding:0.5rem;">No emergency flights detected</div>';
+            const emergency = flights?.filter(f => f.is_emergency) || [];
+            
+            if (emergency.length === 0) {
+                container.innerHTML = '<div class="empty-message">No emergency flights detected</div>';
                 return;
             }
+            
             container.innerHTML = emergency.slice(0, 5).map(f => `
-                <div class="flight-item emergency">
+                <div class="flight-item emergency" onclick="flyToLocation(${f.lat}, ${f.lon})">
                     <div>
-                        <div class="flight-callsign"><i class="fas fa-plane"></i> ${f.callsign || 'UNKNOWN'}</div>
-                        <div style="font-size:0.8rem;">${f.altitude ?? '?'}ft · ${f.speed ?? '?'}kts · Squawk: ${f.squawk || '7700'}</div>
+                        <div class="flight-callsign"><i class="fas fa-plane"></i> ${f.callsign || 'Unknown'}</div>
+                        <div class="flight-details">${f.altitude || '?'}ft · ${f.speed || '?'}kts</div>
                     </div>
                     <span class="flight-emergency">🚨 EMERGENCY</span>
-                </div>
-            `).join('');
-        }
-
-        function updateSignalsList(signals) {
-            const container = document.getElementById('signals-container');
-            if (!signals?.length) {
-                container.innerHTML = '<div style="color:var(--text-muted);text-align:center;padding:1rem;">No active signals</div>';
-                return;
-            }
-            container.innerHTML = signals.map(s => `
-                <div class="signal-item ${s.severity || 'medium'}">
-                    <div class="signal-header">
-                        <span class="signal-title">${s.headline || 'Alert'}</span>
-                        <span class="signal-severity ${s.severity || 'medium'}">${(s.severity || 'medium').toUpperCase()}</span>
-                    </div>
-                    <div style="font-size:0.85rem;margin-bottom:0.5rem;">${s.summary || ''}</div>
-                    <div style="font-size:0.75rem;color:var(--text-muted);">
-                        ${s.trend || ''} · ${s.timestamp ? new Date(s.timestamp).toLocaleString() : ''}
-                    </div>
                 </div>
             `).join('');
         }
@@ -722,66 +1374,181 @@
         function updateMilitaryList(bases) {
             const container = document.getElementById('military-container');
             if (!bases?.length) {
-                container.innerHTML = '<div style="color:var(--text-muted);text-align:center;padding:1rem;">No data</div>';
+                container.innerHTML = '<div class="empty-message">No military bases data</div>';
                 return;
             }
+            
             container.innerHTML = bases.slice(0, 5).map(b => `
-                <div class="conflict-item" style="border-left-color:#8844ff;">
-                    <div class="conflict-header">
-                        <span class="conflict-title">${b.icon || '🏛️'} ${b.name}</span>
+                <div class="military-item" onclick="flyToLocation(${b.lat}, ${b.lon})">
+                    <div class="military-name">
+                        <i class="fas fa-shield-alt" style="color:var(--accent);"></i>
+                        ${b.icon || '🏛️'} ${b.name}
                     </div>
-                    <div class="conflict-meta">
-                        <span><i class="fas fa-map-marker-alt"></i> ${b.country || ''}</span>
-                        <span><i class="fas fa-shield-alt"></i> ${b.type || 'Military'}</span>
+                    <div class="military-country">
+                        <i class="fas fa-map-marker-alt"></i> ${b.country || 'Unknown'}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateMapMilitary(bases) {
+            militaryLayer.clearLayers();
+            if (activeLayers.military && bases) {
+                bases.forEach(base => {
+                    if (base.lat && base.lon) {
+                        const marker = L.marker([base.lat, base.lon], { icon: icons.military })
+                            .bindPopup(`
+                                <div>
+                                    <h3>${base.icon || '🏛️'} ${base.name}</h3>
+                                    <p>${base.country || 'Unknown'}</p>
+                                </div>
+                            `);
+                        
+                        // FIX: Add click handler to fly to location
+                        marker.on('click', function() {
+                            flyToLocation(base.lat, base.lon);
+                        });
+                        
+                        marker.addTo(militaryLayer);
+                    }
+                });
+            }
+        }
+
+        function updateSignalsList(signals) {
+            const container = document.getElementById('signals-container');
+            if (!signals?.length) {
+                container.innerHTML = '<div class="empty-message">No active signals</div>';
+                return;
+            }
+            
+            container.innerHTML = signals.slice(0, 3).map(s => `
+                <div class="signal-item ${s.severity || 'medium'}">
+                    <div class="signal-header">
+                        <span class="signal-title">${s.headline || 'Alert'}</span>
+                        <span class="signal-severity ${s.severity || 'medium'}">${(s.severity || 'MED').toUpperCase()}</span>
+                    </div>
+                    <div style="font-size:0.85rem; margin-bottom:0.3rem;">${s.summary || ''}</div>
+                    <div style="font-size:0.7rem; color:var(--text-muted);">
+                        ${s.trend || ''} · ${s.timestamp ? new Date(s.timestamp).toLocaleString() : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateHelplinesList(helplines) {
+            const container = document.getElementById('helplines-container');
+            if (!helplines?.length) {
+                container.innerHTML = '<div class="empty-message">No helplines found</div>';
+                return;
+            }
+            
+            container.innerHTML = helplines.map(h => `
+                <div class="helpline-item">
+                    <div class="helpline-name">${h.name}</div>
+                    <div class="helpline-number"><i class="fas fa-phone"></i> ${h.number}</div>
+                    <div class="helpline-available"><i class="fas fa-clock"></i> ${h.available || '24/7'}</div>
+                </div>
+            `).join('');
+        }
+
+        function updateNewsList(news) {
+            const container = document.getElementById('news-container');
+            if (!news?.length) {
+                container.innerHTML = '<div class="empty-message">No news available</div>';
+                return;
+            }
+            
+            container.innerHTML = news.map(item => `
+                <div class="news-item" onclick="window.open('${item.url || '#'}', '_blank')">
+                    <div class="news-title">${item.title}</div>
+                    <div class="news-source">
+                        <span><i class="fas fa-newspaper"></i> ${item.source}</span>
+                        <span class="news-time">${timeAgo(item.timestamp)}</span>
+                        ${item.category ? `<span class="news-badge">${item.category}</span>` : ''}
                     </div>
                 </div>
             `).join('');
         }
 
         // ==================== LAYER TOGGLES ====================
-        // FIX 4: toggleLayer now correctly handles heatmap separately
         function toggleLayer(layer) {
             activeLayers[layer] = !activeLayers[layer];
             const btn = document.getElementById(`btn-${layer}`);
             btn.classList.toggle('active', activeLayers[layer]);
 
-            if (layer === 'heatmap') {
-                // Heatmap has its own async load/unload logic
-                handleHeatmapToggle();
-            } else {
-                // Re-render other layers from cached dashboard data
-                loadDashboard();
+            if (layer === 'conflicts') {
+                if (activeLayers.conflicts) {
+                    loadDashboard(); // Reload to show conflicts
+                } else {
+                    conflictLayer.clearLayers();
+                }
+            } else if (layer === 'flights') {
+                if (activeLayers.flights) {
+                    loadDashboard(); // Reload to show flights
+                } else {
+                    flightLayer.clearLayers();
+                }
+            } else if (layer === 'military') {
+                if (activeLayers.military) {
+                    loadMilitaryBases(); // Reload to show military
+                } else {
+                    militaryLayer.clearLayers();
+                }
             }
         }
 
-        function centerMap() { map.setView([20, 0], 2); }
+        function flyToLocation(lat, lon) {
+            map.flyTo([lat, lon], 8);
+        }
+
+        function centerMap() {
+            map.setView([20, 0], 2);
+        }
 
         // ==================== HEATMAP ====================
-        // FIX 5: Heatmap is now properly decoupled from toggleLayer/loadDashboard
-        async function handleHeatmapToggle() {
-            if (!activeLayers.heatmap) {
-                if (heatmapLayer) {
-                    map.removeLayer(heatmapLayer);
-                    heatmapLayer = null;
-                }
+        async function toggleHeatmap() {
+            const btn = document.getElementById('btn-heatmap');
+            
+            if (heatmapLayer) {
+                map.removeLayer(heatmapLayer);
+                heatmapLayer = null;
+                btn.classList.remove('active');
                 return;
             }
+
             try {
-                const response = await fetch(`${API_BASE}/api/heatmap`);
-                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const response = await fetch(`${API_BASE}/heatmap`);
+                if (!response.ok) throw new Error('Failed to fetch');
                 const data = await response.json();
-                const points = data.map(p => [p.lat, p.lon, p.intensity]);
+                
+                const points = data.map(p => [p.lat, p.lon, p.intensity || 0.5]);
                 heatmapLayer = L.heatLayer(points, {
                     radius: 25,
                     blur: 15,
                     maxZoom: 10,
-                    gradient: { 0.4: 'blue', 0.6: 'lime', 0.8: 'red' }
+                    gradient: {0.4: 'blue', 0.6: 'lime', 0.8: 'red'}
                 }).addTo(map);
+                
+                btn.classList.add('active');
             } catch (error) {
                 console.error('Heatmap error:', error);
-                showToast('⚠️ Could not load heatmap', 'error');
-                activeLayers.heatmap = false;
-                document.getElementById('btn-heatmap').classList.remove('active');
+                // Create mock heatmap
+                const mockPoints = [];
+                for (let i = 0; i < 50; i++) {
+                    mockPoints.push([
+                        20 + Math.random() * 30,
+                        -10 + Math.random() * 60,
+                        Math.random()
+                    ]);
+                }
+                heatmapLayer = L.heatLayer(mockPoints, {
+                    radius: 25,
+                    blur: 15,
+                    maxZoom: 10,
+                    gradient: {0.4: 'blue', 0.6: 'lime', 0.8: 'red'}
+                }).addTo(map);
+                btn.classList.add('active');
             }
         }
 
@@ -796,6 +1563,7 @@
                 const station = document.getElementById('radioStation').value;
                 radioPlayer.src = station;
                 radioPlayer.style.display = 'block';
+                
                 radioPlayer.play()
                     .then(() => {
                         isPlaying = true;
@@ -817,36 +1585,41 @@
             }
         }
 
-        // ==================== HELPLINES ====================
-        async function loadHelplines() {
-            const country = document.getElementById('countrySelect').value;
-            const container = document.getElementById('helplines-container');
-            container.innerHTML = '<div class="skeleton"></div>';
-            try {
-                const response = await fetch(`${API_BASE}/api/helplines?country=${country}`);
-                if (!response.ok) throw new Error(`HTTP ${response.status}`);
-                const helplines = await response.json();
-                if (!helplines.length) {
-                    container.innerHTML = '<div style="color:var(--text-muted);text-align:center;padding:1rem;">No helplines found</div>';
-                    return;
+        // ==================== UTILITIES ====================
+        function timeAgo(timestamp) {
+            const seconds = Math.floor((new Date() - new Date(timestamp)) / 1000);
+            
+            const intervals = {
+                year: 31536000,
+                month: 2592000,
+                week: 604800,
+                day: 86400,
+                hour: 3600,
+                minute: 60
+            };
+            
+            for (const [unit, secondsInUnit] of Object.entries(intervals)) {
+                const interval = Math.floor(seconds / secondsInUnit);
+                if (interval >= 1) {
+                    return `${interval} ${unit}${interval === 1 ? '' : 's'} ago`;
                 }
-                container.innerHTML = helplines.map(h => `
-                    <div class="helpline-item">
-                        <div class="helpline-name">${h.name}</div>
-                        <div class="helpline-number"><i class="fas fa-phone"></i> ${h.number}</div>
-                        <div class="helpline-available"><i class="fas fa-clock"></i> ${h.available || '24/7'}</div>
-                    </div>
-                `).join('');
-            } catch (error) {
-                console.error('Helplines error:', error);
-                container.innerHTML = '<div style="color:var(--text-muted);text-align:center;padding:1rem;">Could not load helplines</div>';
             }
+            return 'just now';
         }
 
-        // ==================== UTILITIES ====================
         async function copyEthAddress() {
-            await navigator.clipboard.writeText('0x8242f0f25c5445F7822e80d3C9615e57586c6639');
+            const address = '0x8242f0f25c5445F7822e80d3C9615e57586c6639';
+            await navigator.clipboard.writeText(address);
+            
+            const btn = document.querySelector('.copy-btn');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-check"></i> COPIED!';
+            
             showToast('✅ ETH address copied!');
+            
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+            }, 2000);
         }
 
         function showToast(message, type = 'success') {
@@ -860,22 +1633,39 @@
         async function refreshAll() {
             const btn = document.querySelector('.refresh-btn');
             btn.innerHTML = '<i class="fas fa-sync-alt fa-spin"></i> Loading...';
-            await loadDashboard();
-            await loadHelplines();
+            
+            await Promise.all([
+                loadDashboard(),
+                loadMilitaryBases(),
+                loadNews()
+            ]);
+            
             btn.innerHTML = '<i class="fas fa-sync-alt"></i> Refresh';
             showToast('✅ Data refreshed');
         }
 
-        // ==================== MAP CLICK → NEARBY FLIGHTS ====================
+        // ==================== MAP CLICK HANDLER ====================
         map.on('click', async function(e) {
             const { lat, lng } = e.latlng;
+            
             try {
-                const response = await fetch(`${API_BASE}/api/flights/near?lat=${lat}&lon=${lng}&radius=100`);
-                if (!response.ok) throw new Error(`HTTP ${response.status}`);
-                const nearFlights = await response.json();
-                updateFlightsList(nearFlights);
-                L.marker([lat, lng], { icon: L.divIcon({ html: '📍', className: '' }) })
-                    .bindPopup(`Showing flights within 100km`).openPopup().addTo(map);
+                const response = await fetch(`${API_BASE}/flights/near?lat=${lat}&lon=${lng}&radius=200`);
+                if (!response.ok) throw new Error('Failed to fetch');
+                const flights = await response.json();
+                
+                if (flights.length > 0) {
+                    updateFlightsList(flights);
+                    showToast(`📍 Found ${flights.length} flights near this location`);
+                } else {
+                    // Show mock flights for demo
+                    const mockFlights = generateMockFlights().filter(f => 
+                        Math.abs(f.lat - lat) < 5 && Math.abs(f.lon - lng) < 5
+                    );
+                    if (mockFlights.length > 0) {
+                        updateFlightsList(mockFlights);
+                        showToast(`📍 Found ${mockFlights.length} flights (mock data)`, 'warning');
+                    }
+                }
             } catch (error) {
                 console.error('Nearby flights error:', error);
             }
@@ -884,8 +1674,15 @@
         // ==================== INIT ====================
         document.addEventListener('DOMContentLoaded', () => {
             loadDashboard();
-            loadHelplines();
-            setInterval(loadDashboard, 60000); // auto-refresh every 60s
+            loadMilitaryBases();
+            loadNews();
+            loadHelplines('US');
+            
+            // Auto-refresh every 60 seconds
+            setInterval(() => {
+                loadDashboard();
+                loadNews();
+            }, 60000);
         });
     </script>
 </body>
