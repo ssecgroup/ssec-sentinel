@@ -1,10 +1,11 @@
-"""ACLED Conflict Data Collector - OAuth Version"""
+"""ACLED Conflict Data Collector - Fixed OAuth Version"""
 import requests
 from datetime import datetime, timedelta
 from typing import List, Dict, Optional
 import logging
 from cachetools import TTLCache
 import time
+import asyncio
 
 logger = logging.getLogger(__name__)
 
@@ -12,6 +13,7 @@ class ACLEDCollector:
     """Collects conflict data from ACLED API using OAuth authentication"""
     
     def __init__(self, username: str, password: str):
+        """Initialize with your ACLED credentials"""
         self.username = username
         self.password = password
         self.base_url = "https://acleddata.com/api/acled/read"
@@ -22,41 +24,62 @@ class ACLEDCollector:
         self.access_token = None
         self.refresh_token = None
         self.token_expiry = None
+        self.max_retries = 3
         
-    def _get_new_token(self) -> Dict:
-        """Get new access token using username/password"""
-        try:
-            response = requests.post(
-                self.token_url,
-                data={
-                    'username': self.username,
-                    'password': self.password,
-                    'grant_type': 'password',
-                    'client_id': 'acled'
-                },
-                headers={'Content-Type': 'application/x-www-form-urlencoded'},
-                timeout=30
-            )
-            response.raise_for_status()
-            token_data = response.json()
-            
-            self.access_token = token_data['access_token']
-            self.refresh_token = token_data.get('refresh_token')
-            self.token_expiry = time.time() + token_data['expires_in']
-            
-            logger.info("Successfully obtained new ACLED access token")
-            return token_data
-            
-        except requests.exceptions.RequestException as e:
-            logger.error(f"Failed to get ACLED token: {e}")
-            raise
+        logger.info(f"ACLED Collector initialized for user: {username}")
     
-    def _refresh_access_token(self) -> Dict:
+    def _get_new_token(self) -> Optional[Dict]:
+        """Get new access token using username/password"""
+        for attempt in range(self.max_retries):
+            try:
+                logger.info(f"Requesting new token from {self.token_url} (attempt {attempt + 1})")
+                
+                response = requests.post(
+                    self.token_url,
+                    data={
+                        'username': self.username,
+                        'password': self.password,
+                        'grant_type': 'password',
+                        'client_id': 'acled'
+                    },
+                    headers={'Content-Type': 'application/x-www-form-urlencoded'},
+                    timeout=30
+                )
+                
+                logger.info(f"Token response status: {response.status_code}")
+                
+                if response.status_code == 200:
+                    token_data = response.json()
+                    
+                    self.access_token = token_data['access_token']
+                    self.refresh_token = token_data.get('refresh_token')
+                    self.token_expiry = time.time() + token_data['expires_in']
+                    
+                    logger.info(f"✅ Successfully obtained ACLED token (expires in {token_data['expires_in']}s)")
+                    return token_data
+                else:
+                    logger.error(f"❌ Token request failed: {response.status_code} - {response.text}")
+                    
+            except requests.exceptions.RequestException as e:
+                logger.error(f"❌ Token request error (attempt {attempt + 1}): {e}")
+                if attempt < self.max_retries - 1:
+                    wait_time = 2 ** attempt
+                    logger.info(f"Waiting {wait_time}s before retry...")
+                    time.sleep(wait_time)
+                else:
+                    logger.error("All token request attempts failed")
+                    return None
+        
+        return None
+    
+    def _refresh_access_token(self) -> Optional[Dict]:
         """Refresh expired access token using refresh token"""
         if not self.refresh_token:
+            logger.warning("No refresh token available, getting new token")
             return self._get_new_token()
         
         try:
+            logger.info("Refreshing access token")
             response = requests.post(
                 self.token_url,
                 data={
@@ -67,64 +90,92 @@ class ACLEDCollector:
                 headers={'Content-Type': 'application/x-www-form-urlencoded'},
                 timeout=30
             )
-            response.raise_for_status()
-            token_data = response.json()
             
-            self.access_token = token_data['access_token']
-            if 'refresh_token' in token_data:
-                self.refresh_token = token_data['refresh_token']
-            self.token_expiry = time.time() + token_data['expires_in']
-            
-            logger.info("Successfully refreshed ACLED access token")
-            return token_data
-            
+            if response.status_code == 200:
+                token_data = response.json()
+                
+                self.access_token = token_data['access_token']
+                if 'refresh_token' in token_data:
+                    self.refresh_token = token_data['refresh_token']
+                self.token_expiry = time.time() + token_data['expires_in']
+                
+                logger.info("✅ Successfully refreshed ACLED token")
+                return token_data
+            else:
+                logger.error(f"❌ Token refresh failed: {response.status_code}")
+                return self._get_new_token()
+                
         except requests.exceptions.RequestException as e:
-            logger.error(f"Failed to refresh ACLED token: {e}")
+            logger.error(f"❌ Token refresh error: {e}")
             return self._get_new_token()
     
-    def _ensure_valid_token(self):
+    def _ensure_valid_token(self) -> bool:
         """Ensure we have a valid token before making API calls"""
-        if not self.access_token or time.time() >= self.token_expiry:
-            self._refresh_access_token()
+        if not self.access_token or time.time() >= self.token_expiry - 60:  # 60s buffer
+            logger.info("Token missing or expired, refreshing...")
+            result = self._refresh_access_token()
+            return result is not None
+        return True
     
-    def _make_api_request(self, params: Dict) -> Dict:
-        """Make authenticated request to ACLED API"""
-        self._ensure_valid_token()
+    def _make_api_request(self, params: Dict) -> Optional[Dict]:
+        """Make authenticated request to ACLED API with proper headers"""
+        if not self._ensure_valid_token():
+            logger.error("Cannot make API request - no valid token")
+            return None
         
-        try:
-            response = requests.get(
-                self.base_url,
-                params=params,
-                headers={
-                    'Authorization': f'Bearer {self.access_token}',
-                    'Content-Type': 'application/json'
-                },
-                timeout=30
-            )
-            response.raise_for_status()
-            return response.json()
+        headers = {
+            'Authorization': f'Bearer {self.access_token}',
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'User-Agent': 'ssec-sentinel/0.3 (https://ssec-sentinel.vercel.app)'
+        }
+        
+        for attempt in range(self.max_retries):
+            try:
+                logger.info(f"Making API request to {self.base_url} (attempt {attempt + 1})")
+                
+                response = requests.get(
+                    self.base_url,
+                    params=params,
+                    headers=headers,
+                    timeout=30
+                )
+                
+                logger.info(f"API response status: {response.status_code}")
+                
+                if response.status_code == 200:
+                    return response.json()
+                elif response.status_code == 403:
+                    logger.warning("Got 403, token might be expired - refreshing")
+                    self._refresh_access_token()
+                    headers['Authorization'] = f'Bearer {self.access_token}'
+                elif response.status_code == 429:
+                    logger.warning("Rate limited, waiting before retry...")
+                    time.sleep(5 * (attempt + 1))
+                else:
+                    logger.error(f"API request failed: {response.status_code} - {response.text}")
+                    
+            except requests.exceptions.Timeout:
+                logger.error(f"Request timeout (attempt {attempt + 1})")
+            except requests.exceptions.ConnectionError:
+                logger.error(f"Connection error (attempt {attempt + 1})")
+            except Exception as e:
+                logger.error(f"Unexpected error: {e}")
             
-        except requests.exceptions.RequestException as e:
-            logger.error(f"ACLED API request failed: {e}")
-            # Try one more time with fresh token
-            self._get_new_token()
-            response = requests.get(
-                self.base_url,
-                params=params,
-                headers={
-                    'Authorization': f'Bearer {self.access_token}',
-                    'Content-Type': 'application/json'
-                },
-                timeout=30
-            )
-            return response.json()
+            if attempt < self.max_retries - 1:
+                wait_time = 2 ** attempt
+                logger.info(f"Waiting {wait_time}s before retry...")
+                time.sleep(wait_time)
+        
+        logger.error("All API request attempts failed")
+        return None
     
     async def fetch_conflicts(self, 
                              country: Optional[str] = None,
                              days_back: int = 7,
                              min_fatalities: int = 0,
                              event_type: Optional[str] = None) -> List[Dict]:
-        """Fetch recent conflict events using OAuth"""
+        """Fetch recent conflict events from ACLED"""
         
         # Check cache first
         cache_key = f"{country}_{days_back}_{min_fatalities}_{event_type}"
@@ -132,45 +183,45 @@ class ACLEDCollector:
             logger.info(f"Returning cached conflicts for {cache_key}")
             return self.cache[cache_key]
         
-        # Calculate date range
-        end_date = datetime.now()
-        start_date = end_date - timedelta(days=days_back)
-        
-        # Build query parameters using ACLED's syntax
-        params = {
-            '_format': 'json',
-            'event_date': f"{start_date.strftime('%Y-%m-%d')}|{end_date.strftime('%Y-%m-%d')}",
-            'event_date_where': 'BETWEEN',
-            'limit': 1000
-        }
-        
-        # Add country filter (supports OR logic)
-        if country:
-            params['country'] = country
-        
-        # Add event type filter
-        if event_type:
-            params['event_type'] = event_type
-        
-        # Add fatality filter
-        if min_fatalities > 0:
-            params['fatalities'] = f">{min_fatalities}"
-        
-        # Request specific fields to reduce response size
-        params['fields'] = 'event_id_cnty,event_date,year,event_type,sub_event_type,actor1,actor2,country,admin1,admin2,location,latitude,longitude,fatalities,notes,tags'
-        
         try:
+            # Calculate date range
+            end_date = datetime.now()
+            start_date = end_date - timedelta(days=days_back)
+            
+            # Build query parameters
+            params = {
+                '_format': 'json',
+                'event_date': f"{start_date.strftime('%Y-%m-%d')}|{end_date.strftime('%Y-%m-%d')}",
+                'event_date_where': 'BETWEEN',
+                'limit': 1000,
+                'fields': 'event_id_cnty,event_date,event_type,sub_event_type,actor1,actor2,country,location,latitude,longitude,fatalities,notes'
+            }
+            
+            # Add optional filters
+            if country:
+                params['country'] = country
+                logger.info(f"Filtering by country: {country}")
+            
+            if event_type:
+                params['event_type'] = event_type
+            
+            if min_fatalities > 0:
+                params['fatalities'] = f">{min_fatalities}"
+            
+            logger.info(f"Fetching conflicts from {start_date.date()} to {end_date.date()}")
+            
+            # Make the API request
             data = self._make_api_request(params)
             
-            if data.get('status') == 200:
+            if data and data.get('status') == 200:
                 conflicts = data.get('data', [])
-                logger.info(f"Fetched {len(conflicts)} conflicts from ACLED")
+                logger.info(f"✅ Successfully fetched {len(conflicts)} real conflicts from ACLED")
                 
                 # Cache results
                 self.cache[cache_key] = conflicts
                 return conflicts
             else:
-                logger.error(f"ACLED API error: {data}")
+                logger.warning("No data returned from ACLED API")
                 return []
             
         except Exception as e:
@@ -223,7 +274,7 @@ class ACLEDCollector:
             "severity": severity,
             "color": color,
             "timestamp": event.get("event_date"),
-            "description": event.get("notes", "")[:200],
+            "description": event.get("notes", "")[:200] if event.get("notes") else "",
             "fatalities": fatalities,
             "actors": {
                 "actor1": event.get("actor1", "Unknown"),
@@ -244,8 +295,7 @@ class ACLEDCollector:
             "total_fatalities": 0,
             "by_type": {},
             "by_country": {},
-            "by_severity": {"CRITICAL": 0, "HIGH": 0, "MODERATE": 0, "LOW": 0},
-            "trending": []
+            "by_severity": {"CRITICAL": 0, "HIGH": 0, "MODERATE": 0, "LOW": 0}
         }
         
         for event in conflicts:
