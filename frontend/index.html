@@ -640,6 +640,116 @@
             100% { background-position: -200% 0; }
         }
     </style>
+    <script src="js/ssec-sources.js"></script>
+<script>
+// ==================== UPDATED MAIN SCRIPT ====================
+const API_BASE = 'https://ssec-sentinel.onrender.com';
+
+// Initialize DataSources with your API keys (if any)
+// DataSources.setACLEDKey('your_key_here'); // If you have one
+
+async function loadDashboard() {
+    try {
+        // Show loading states
+        document.getElementById('conflicts-container').innerHTML = '<div class="skeleton"></div><div class="skeleton"></div>';
+        document.getElementById('flights-container').innerHTML = '<div class="skeleton"></div>';
+        document.getElementById('signals-container').innerHTML = '<div class="skeleton"></div>';
+        document.getElementById('news-container').innerHTML = '<div class="skeleton"></div><div class="skeleton"></div>';
+
+        // Fetch all data in parallel with proper error handling
+        const [conflictsResult, flightsResult, signalsResult, newsResult, disastersResult] = await Promise.allSettled([
+            DataSources.fetchConflicts(),
+            DataSources.fetchFlights(map.getCenter().lat, map.getCenter().lng, 500),
+            DataSources.fetchSignals(),
+            DataSources.fetchNews(),
+            DataSources.fetchDisasters()
+        ]);
+
+        // Process conflicts
+        if (conflictsResult.status === 'fulfilled') {
+            const { data, source, mock } = conflictsResult.value;
+            updateConflictsList(data);
+            document.getElementById('conflict-source').innerHTML = source + (mock ? ' ⚠️' : '');
+            document.getElementById('conflict-count').innerText = data.length;
+            updateMapConflicts(data);
+        } else {
+            console.error('Conflicts failed:', conflictsResult.reason);
+        }
+
+        // Process flights
+        if (flightsResult.status === 'fulfilled') {
+            const { data, source, mock } = flightsResult.value;
+            const emergencyCount = data.filter(f => f.is_emergency).length;
+            updateFlightsList(data);
+            document.getElementById('flight-source').innerHTML = source + (mock ? ' ⚠️' : '');
+            document.getElementById('flight-count').innerText = emergencyCount;
+            updateMapFlights(data);
+        }
+
+        // Process signals
+        if (signalsResult.status === 'fulfilled') {
+            const { data, source, mock } = signalsResult.value;
+            updateSignalsList(data);
+            document.getElementById('signal-count').innerText = data.length;
+        }
+
+        // Process news
+        if (newsResult.status === 'fulfilled') {
+            const { data, source, mock } = newsResult.value;
+            updateNewsList(data);
+        }
+
+        // Process disasters (if you add a disasters container)
+        if (disastersResult.status === 'fulfilled') {
+            const { data, source, mock } = disastersResult.value;
+            // Update disasters list if you have one
+        }
+
+    } catch (error) {
+        console.error('Dashboard error:', error);
+        showToast('⚠️ Some data sources failed', 'error');
+    }
+}
+
+// Modified refresh function
+async function refreshAll() {
+    const btn = document.querySelector('.refresh-btn');
+    btn.innerHTML = '<i class="fas fa-sync-alt fa-spin"></i> Loading...';
+    
+    // Clear cache to force fresh data
+    DataSources.clearCache();
+    
+    await loadDashboard();
+    await loadMilitaryBases(); // Keep existing military bases function
+    await loadHelplines(document.getElementById('countrySearch').value || 'US');
+    
+    btn.innerHTML = '<i class="fas fa-sync-alt"></i> Refresh';
+    showToast('✅ All data refreshed');
+}
+
+// Update map click handler to use DataSources
+map.on('click', async function(e) {
+    const { lat, lng } = e.latlng;
+    
+    const result = await DataSources.fetchFlights(lat, lng, 200);
+    if (result.data.length > 0) {
+        updateFlightsList(result.data);
+        showToast(`📍 Found ${result.data.length} flights from ${result.source}`);
+    }
+});
+
+// Initialize on load
+document.addEventListener('DOMContentLoaded', () => {
+    loadDashboard();
+    loadMilitaryBases();
+    loadHelplines('US');
+    
+    // Auto-refresh every 60 seconds
+    setInterval(() => {
+        loadDashboard();
+    }, 60000);
+});
+</script>
 </head>
 <body>
     <header class="header">
@@ -827,7 +937,7 @@
     
     <script>
         // ==================== CONFIGURATION ====================
-        const API_BASE = 'http://127.0.0.1:8000';
+        const API_BASE = 'https://ssec-sentinel.onrender.com';
         let map = L.map('map').setView([20, 0], 2);
         
         // Layers
