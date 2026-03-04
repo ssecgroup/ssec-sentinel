@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 try:
     logger.info("=" * 60)
-    logger.info("🚀 ssec-Sentinel v0.3.0 Starting...")
+    logger.info("🚀 ssec-Sentinel v1.0.0 Starting...")
     logger.info("=" * 60)
 
     # Add backend to path
@@ -104,7 +104,7 @@ try:
     app = FastAPI(
         title="ssec-Sentinel API",
         description="Emergency Intelligence Platform with War Zone Monitoring",
-        version="0.3.0",
+        version="1.0.0",
         docs_url="/docs",
         redoc_url="/redoc"
     )
@@ -155,7 +155,7 @@ async def root():
     """Root endpoint with API information"""
     return {
         "message": "ssec-Sentinel API",
-        "version": "0.3.0",
+        "version": "1.0.0",
         "status": "operational",
         "collectors": {n: "available" if s else "unavailable" for n, s in available_collectors.items()},
         "endpoints": [
@@ -192,7 +192,7 @@ async def health_check():
     return {
         "status": "healthy",
         "timestamp": datetime.utcnow().isoformat(),
-        "version": "0.3.0",
+        "version": "1.0.0",
         "service": "ssec-sentinel",
         "collectors": available_collectors,
     }
@@ -1326,9 +1326,9 @@ def get_mock_news():
 
 if __name__ == "__main__":
     print("=" * 60)
-    print("🚀 ssec-Sentinel v0.3.0 Starting...")
+    print(" ssec-Sentinel v1.0.0 Starting...")
     print("=" * 60)
-    print("\n📡 Endpoints available:")
+    print("\n Endpoints available:")
     print("  • GET  /")
     print("  • GET  /health")
     print("  • GET  /conflicts")
@@ -1354,13 +1354,13 @@ if __name__ == "__main__":
     print("  • GET  /helplines/countries")
     print("  • GET  /news")
     print("  • GET  /dashboard")
-    print("\n📚 Documentation at: /docs")
-    print("🎯 Press Ctrl+C to stop\n")
+    print("\n Documentation at: /docs")
+    print(" Press Ctrl+C to stop\n")
     
     uvicorn.run(
         "ssec_app:app",
         host="0.0.0.0",
         port=8000,
-        reload=True,
+        reload=False,
         log_level="info"
     )
